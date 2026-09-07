@@ -1,12 +1,12 @@
-```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <meta name="theme-color" content="#080808">
 
-<title>NOIRÉ Café — Digital Menu & QR Ordering</title>
+<title>NOIRÉ Café — Digital Menu</title>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -18,7 +18,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
 
-<!-- QR Generator -->
+<!-- QR Code -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
 <style>
@@ -31,8 +31,7 @@
 
 :root{
     --bg:#080808;
-    --bg2:#111;
-    --card:#171717;
+    --card:#151515;
     --card2:#202020;
     --gold:#d7b568;
     --gold-light:#f4dda1;
@@ -41,6 +40,7 @@
     --border:#2c2c2c;
     --green:#59d889;
     --red:#ff6666;
+    --orange:#ffb95e;
 }
 
 html{
@@ -70,15 +70,18 @@ button{
 }
 
 button:disabled{
-    cursor:not-allowed;
     opacity:.6;
+    cursor:not-allowed;
 }
 
 .hidden{
     display:none!important;
 }
 
-/* ================= HEADER ================= */
+
+/* =====================================================
+HEADER
+===================================================== */
 
 .header{
     position:fixed;
@@ -94,7 +97,7 @@ button:disabled{
 
     padding:0 5%;
 
-    background:rgba(8,8,8,.88);
+    background:rgba(8,8,8,.9);
     backdrop-filter:blur(20px);
 
     border-bottom:1px solid rgba(215,181,104,.15);
@@ -114,13 +117,10 @@ button:disabled{
 
 .header-btn{
     padding:9px 15px;
-
     background:transparent;
     color:#ddd;
-
     border:1px solid #333;
     border-radius:25px;
-
     transition:.25s;
 }
 
@@ -130,7 +130,10 @@ button:disabled{
     border-color:var(--gold);
 }
 
-/* ================= PAGE ================= */
+
+/* =====================================================
+PAGE
+===================================================== */
 
 .page{
     display:none;
@@ -142,18 +145,21 @@ button:disabled{
     display:block;
 }
 
-/* ================= MENU ================= */
+
+/* =====================================================
+MENU HERO
+===================================================== */
 
 .menu-hero{
     padding:75px 20px 55px;
     text-align:center;
 
     background:
-        radial-gradient(
-            circle at 50% 0,
-            rgba(215,181,104,.2),
-            transparent 48%
-        );
+    radial-gradient(
+        circle at 50% 0,
+        rgba(215,181,104,.2),
+        transparent 48%
+    );
 }
 
 .menu-hero h1{
@@ -180,6 +186,7 @@ button:disabled{
 
     color:var(--gold-light);
     background:rgba(215,181,104,.1);
+
     border:1px solid rgba(215,181,104,.3);
 }
 
@@ -198,16 +205,16 @@ button:disabled{
     margin-bottom:25px;
 }
 
-/* ================= CATEGORIES ================= */
+
+/* =====================================================
+CATEGORIES
+===================================================== */
 
 .categories{
     display:flex;
     gap:10px;
-
     overflow-x:auto;
-
     padding-bottom:15px;
-
     scrollbar-width:none;
 }
 
@@ -217,7 +224,6 @@ button:disabled{
 
 .category{
     white-space:nowrap;
-
     padding:11px 20px;
 
     border:1px solid #333;
@@ -236,7 +242,10 @@ button:disabled{
     border-color:var(--gold);
 }
 
-/* ================= MENU GRID ================= */
+
+/* =====================================================
+MENU GRID
+===================================================== */
 
 .menu-grid{
     display:grid;
@@ -250,11 +259,11 @@ button:disabled{
     border:1px solid var(--border);
 
     background:
-        linear-gradient(
-            145deg,
-            #191919,
-            #101010
-        );
+    linear-gradient(
+        145deg,
+        #191919,
+        #101010
+    );
 
     border-radius:24px;
 
@@ -267,7 +276,7 @@ button:disabled{
     border-color:rgba(215,181,104,.5);
 
     box-shadow:
-        0 20px 50px rgba(0,0,0,.4);
+    0 20px 50px rgba(0,0,0,.4);
 }
 
 .food-icon{
@@ -294,9 +303,7 @@ button:disabled{
 
 .food-card p{
     min-height:45px;
-
     color:#858585;
-
     font-size:14px;
     line-height:1.5;
 }
@@ -305,7 +312,6 @@ button:disabled{
     display:flex;
     align-items:center;
     justify-content:space-between;
-
     margin-top:22px;
 }
 
@@ -335,7 +341,10 @@ button:disabled{
     transform:scale(1.04);
 }
 
-/* ================= CART ================= */
+
+/* =====================================================
+CART
+===================================================== */
 
 .cart-button{
     position:fixed;
@@ -356,8 +365,7 @@ button:disabled{
 
     font-weight:700;
 
-    box-shadow:
-        0 15px 40px rgba(0,0,0,.5);
+    box-shadow:0 15px 40px rgba(0,0,0,.5);
 
     transition:.25s;
 }
@@ -384,7 +392,10 @@ button:disabled{
     color:#fff;
 }
 
-/* ================= MODAL ================= */
+
+/* =====================================================
+OVERLAY
+===================================================== */
 
 .overlay{
     position:fixed;
@@ -462,7 +473,10 @@ button:disabled{
     font-size:22px;
 }
 
-/* ================= CART ITEMS ================= */
+
+/* =====================================================
+CART ITEMS
+===================================================== */
 
 .cart-item{
     display:flex;
@@ -530,7 +544,10 @@ button:disabled{
     background:var(--gold-light);
 }
 
-/* ================= FORM ================= */
+
+/* =====================================================
+FORM
+===================================================== */
 
 .form-group{
     margin-bottom:16px;
@@ -570,7 +587,10 @@ button:disabled{
     border-color:var(--gold);
 }
 
-/* ================= PAYMENT ================= */
+
+/* =====================================================
+PAYMENT
+===================================================== */
 
 .payment-center{
     text-align:center;
@@ -578,27 +598,21 @@ button:disabled{
 
 .payment-amount{
     font-size:35px;
-
     color:var(--gold-light);
-
     font-weight:700;
-
     margin:15px 0;
 }
 
 #paymentQR{
     display:flex;
     justify-content:center;
-
     margin:25px auto;
 }
 
 #paymentQR canvas,
 #paymentQR img{
     background:#fff;
-
     padding:10px;
-
     border-radius:10px;
 }
 
@@ -623,19 +637,19 @@ button:disabled{
     text-decoration:none;
 }
 
-/* ================= ADMIN ================= */
+
+/* =====================================================
+ADMIN
+===================================================== */
 
 .admin-container{
     width:min(1400px,94%);
-
     margin:40px auto;
 }
 
 .admin-title{
     font-family:"Playfair Display",serif;
-
     font-size:45px;
-
     margin-bottom:30px;
 }
 
@@ -705,17 +719,13 @@ button:disabled{
 
 .order-top{
     display:flex;
-
     justify-content:space-between;
-
     gap:15px;
 }
 
 .order-table{
     color:var(--gold-light);
-
     font-size:23px;
-
     font-weight:700;
 }
 
@@ -730,19 +740,14 @@ button:disabled{
 
 .order-row{
     display:flex;
-
     justify-content:space-between;
-
     padding:6px 0;
-
     color:#aaa;
 }
 
 .order-actions{
     display:flex;
-
     flex-wrap:wrap;
-
     gap:8px;
 }
 
@@ -765,15 +770,23 @@ button:disabled{
 }
 
 .unpaid{
-    color:#ffb95e;
+    color:var(--orange);
 }
 
-/* ================= QR ================= */
+
+/* =====================================================
+QR PAGE
+===================================================== */
 
 .qr-container{
     width:min(1200px,94%);
-
     margin:45px auto;
+}
+
+.qr-intro{
+    color:#888;
+    margin-top:-20px;
+    margin-bottom:25px;
 }
 
 .qr-grid{
@@ -796,6 +809,17 @@ button:disabled{
     background:#151515;
 
     border-radius:22px;
+
+    transition:.3s;
+}
+
+.qr-card:hover{
+    border-color:var(--gold);
+    transform:translateY(-4px);
+}
+
+.qr-card h2{
+    color:var(--gold-light);
 }
 
 .qr-white{
@@ -828,15 +852,15 @@ button:disabled{
 
 .qr-url{
     color:#777;
-
     font-size:11px;
-
     word-break:break-all;
-
     margin-bottom:15px;
 }
 
-/* ================= TOAST ================= */
+
+/* =====================================================
+TOAST
+===================================================== */
 
 .toast{
     position:fixed;
@@ -868,7 +892,10 @@ button:disabled{
     transform:translate(-50%,0);
 }
 
-/* ================= MOBILE ================= */
+
+/* =====================================================
+MOBILE
+===================================================== */
 
 @media(max-width:900px){
 
@@ -923,32 +950,60 @@ button:disabled{
 
 }
 
-/* ================= PRINT ================= */
+
+/* =====================================================
+PRINT QR
+===================================================== */
 
 @media print{
 
-    body *{
-        visibility:hidden;
+    body{
+        background:#fff;
+        color:#111;
     }
 
-}
+    .header,
+    .cart-button,
+    .admin-title,
+    .qr-intro,
+    .print-btn,
+    .qr-url,
+    .qr-card button{
+        display:none!important;
+    }
 
-/* ================= LOADING ================= */
+    .page{
+        padding:0;
+    }
 
-.loading{
-    text-align:center;
+    .qr-grid{
+        display:grid;
+        grid-template-columns:repeat(2,1fr);
+    }
 
-    padding:40px;
+    .qr-card{
+        background:#fff;
+        color:#111;
+        border:1px solid #ccc;
+        page-break-inside:avoid;
+    }
 
-    color:#777;
+    .qr-card h2{
+        color:#111;
+    }
+
 }
 
 </style>
 </head>
 
+
 <body>
 
-<!-- ================= HEADER ================= -->
+
+<!-- =====================================================
+HEADER
+===================================================== -->
 
 <header class="header">
 
@@ -984,7 +1039,9 @@ button:disabled{
 </header>
 
 
-<!-- ================= MENU PAGE ================= -->
+<!-- =====================================================
+MENU PAGE
+===================================================== -->
 
 <div
     id="menuPage"
@@ -1038,6 +1095,7 @@ button:disabled{
         class="cart-button"
         onclick="openCart()"
     >
+
         🛒 Cart
 
         <span
@@ -1052,7 +1110,9 @@ button:disabled{
 </div>
 
 
-<!-- ================= ADMIN PAGE ================= -->
+<!-- =====================================================
+ADMIN PAGE
+===================================================== -->
 
 <div
     id="adminPage"
@@ -1076,9 +1136,7 @@ button:disabled{
 
         <div class="form-group">
 
-            <label>
-                Email
-            </label>
+            <label>Email</label>
 
             <input
                 id="adminEmail"
@@ -1090,14 +1148,12 @@ button:disabled{
 
         <div class="form-group">
 
-            <label>
-                Password
-            </label>
+            <label>Password</label>
 
             <input
                 id="adminPassword"
                 type="password"
-                placeholder="Password"
+                placeholder="Admin password"
             >
 
         </div>
@@ -1121,13 +1177,12 @@ button:disabled{
             Café Dashboard
         </h1>
 
+
         <div class="stats">
 
             <div class="stat">
 
-                <span>
-                    Total Orders
-                </span>
+                <span>Total Orders</span>
 
                 <strong id="totalOrders">
                     0
@@ -1137,9 +1192,7 @@ button:disabled{
 
             <div class="stat">
 
-                <span>
-                    Pending
-                </span>
+                <span>Pending</span>
 
                 <strong id="pendingOrders">
                     0
@@ -1149,9 +1202,7 @@ button:disabled{
 
             <div class="stat">
 
-                <span>
-                    Preparing
-                </span>
+                <span>Preparing</span>
 
                 <strong id="preparingOrders">
                     0
@@ -1161,9 +1212,7 @@ button:disabled{
 
             <div class="stat">
 
-                <span>
-                    Paid Revenue
-                </span>
+                <span>Paid Revenue</span>
 
                 <strong id="revenue">
                     ₹0
@@ -1217,7 +1266,9 @@ button:disabled{
 </div>
 
 
-<!-- ================= QR PAGE ================= -->
+<!-- =====================================================
+QR PAGE
+===================================================== -->
 
 <div
     id="qrPage"
@@ -1227,30 +1278,20 @@ button:disabled{
     <div class="qr-container">
 
         <h1 class="admin-title">
-            Table QR Generator
+            Table QR Codes
         </h1>
 
-        <div class="form-group">
-
-            <label>
-                How many tables?
-            </label>
-
-            <input
-                id="tableCount"
-                type="number"
-                min="1"
-                max="200"
-                value="10"
-            >
-
-        </div>
+        <p class="qr-intro">
+            These QR codes are already configured for your 5 tables.
+            Print one QR code and place it on the matching table.
+        </p>
 
         <button
-            class="primary"
-            onclick="generateQRs()"
+            class="primary print-btn"
+            style="max-width:350px"
+            onclick="window.print()"
         >
-            Generate Table QR Codes
+            🖨 Print All 5 QR Codes
         </button>
 
         <div
@@ -1263,7 +1304,9 @@ button:disabled{
 </div>
 
 
-<!-- ================= CART ================= -->
+<!-- =====================================================
+CART MODAL
+===================================================== -->
 
 <div
     id="cartOverlay"
@@ -1291,9 +1334,7 @@ button:disabled{
 
         <div class="total">
 
-            <span>
-                Total
-            </span>
+            <span>Total</span>
 
             <span id="cartTotal">
                 ₹0
@@ -1313,7 +1354,9 @@ button:disabled{
 </div>
 
 
-<!-- ================= CHECKOUT ================= -->
+<!-- =====================================================
+CHECKOUT MODAL
+===================================================== -->
 
 <div
     id="checkoutOverlay"
@@ -1353,25 +1396,6 @@ button:disabled{
             >
                 Table -
             </strong>
-
-        </div>
-
-
-        <div
-            id="directTableBox"
-            class="form-group hidden"
-        >
-
-            <label>
-                Table Number
-            </label>
-
-            <input
-                id="manualTable"
-                type="number"
-                min="1"
-                placeholder="Enter table number"
-            >
 
         </div>
 
@@ -1447,7 +1471,9 @@ button:disabled{
 </div>
 
 
-<!-- ================= PAYMENT ================= -->
+<!-- =====================================================
+PAYMENT MODAL
+===================================================== -->
 
 <div
     id="paymentOverlay"
@@ -1560,7 +1586,9 @@ button:disabled{
 </div>
 
 
-<!-- ================= STATUS ================= -->
+<!-- =====================================================
+STATUS MODAL
+===================================================== -->
 
 <div
     id="statusOverlay"
@@ -1636,7 +1664,9 @@ button:disabled{
 </div>
 
 
-<!-- ================= TOAST ================= -->
+<!-- =====================================================
+TOAST
+===================================================== -->
 
 <div
     id="toast"
@@ -1647,18 +1677,19 @@ button:disabled{
 <script>
 
 /* =========================================================
-   CONFIGURATION
+CONFIGURATION
 ========================================================= */
 
 /*
-    IMPORTANT:
+============================================================
+IMPORTANT: CHANGE YOUR UPI ID HERE
+============================================================
 
-    Replace this with your real UPI ID.
+Example:
 
-    Example:
-    prashant@oksbi
-    mycafe@okaxis
-    mycafe@upi
+const UPI_ID = "prashant@oksbi";
+
+============================================================
 */
 
 const UPI_ID = "YOURUPI@upi";
@@ -1668,9 +1699,21 @@ const CAFE_NAME = "NOIRÉ Café";
 
 
 /*
-    Firebase configuration.
+============================================================
+ONLY 5 TABLES
+============================================================
+*/
 
-    Replace ALL values with your Firebase Web App config.
+const TOTAL_TABLES = 5;
+
+
+/*
+============================================================
+FIREBASE CONFIG
+============================================================
+
+Replace these values with your Firebase Web App config.
+============================================================
 */
 
 const firebaseConfig = {
@@ -1697,7 +1740,7 @@ const firebaseConfig = {
 
 
 /* =========================================================
-   FIREBASE
+FIREBASE INITIALIZATION
 ========================================================= */
 
 let firebaseReady = false;
@@ -1726,7 +1769,7 @@ try{
 }catch(error){
 
     console.error(
-        "Firebase initialization error:",
+        "Firebase error:",
         error
     );
 
@@ -1734,7 +1777,7 @@ try{
 
 
 /* =========================================================
-   MENU DATA
+MENU
 ========================================================= */
 
 const menu = [
@@ -1851,7 +1894,7 @@ const menu = [
 
 
 /* =========================================================
-   VARIABLES
+STATE
 ========================================================= */
 
 let currentTable = null;
@@ -1870,7 +1913,7 @@ let toastTimer;
 
 
 /* =========================================================
-   TABLE URL
+GET TABLE FROM URL
 ========================================================= */
 
 function getTableFromURL(){
@@ -1883,15 +1926,27 @@ function getTableFromURL(){
     const table =
         params.get("table");
 
+
     if(
         table &&
-        /^\d+$/.test(table) &&
-        Number(table) > 0
+        /^\d+$/.test(table)
     ){
 
-        return table;
+        const number =
+            Number(table);
+
+
+        if(
+            number >= 1 &&
+            number <= TOTAL_TABLES
+        ){
+
+            return String(number);
+
+        }
 
     }
+
 
     return null;
 
@@ -1899,7 +1954,7 @@ function getTableFromURL(){
 
 
 /* =========================================================
-   OPEN TABLE
+SET TABLE
 ========================================================= */
 
 function setTable(table){
@@ -1917,6 +1972,7 @@ function setTable(table){
 
     }
 
+
     currentTable =
         String(table);
 
@@ -1933,7 +1989,7 @@ function setTable(table){
 
 
 /* =========================================================
-   PAGE SYSTEM
+PAGE SYSTEM
 ========================================================= */
 
 function showPage(page){
@@ -1971,11 +2027,23 @@ function showPage(page){
         0
     );
 
+
+    /*
+    Generate QR automatically
+    whenever QR page is opened.
+    */
+
+    if(page === "qr"){
+
+        generateQRs();
+
+    }
+
 }
 
 
 /* =========================================================
-   CATEGORIES
+CATEGORIES
 ========================================================= */
 
 function renderCategories(){
@@ -2023,10 +2091,6 @@ function renderCategories(){
 }
 
 
-/* =========================================================
-   SELECT CATEGORY
-========================================================= */
-
 function selectCategory(category){
 
     currentCategory =
@@ -2040,7 +2104,7 @@ function selectCategory(category){
 
 
 /* =========================================================
-   MENU
+RENDER MENU
 ========================================================= */
 
 function renderMenu(){
@@ -2107,7 +2171,7 @@ function renderMenu(){
 
 
 /* =========================================================
-   ADD TO CART
+ADD TO CART
 ========================================================= */
 
 function addToCart(id){
@@ -2161,8 +2225,21 @@ function addToCart(id){
 
 
 /* =========================================================
-   CART
+CART TOTAL
 ========================================================= */
+
+function cartTotal(){
+
+    return cart.reduce(
+        (total,item) =>
+        total +
+        item.price *
+        item.qty,
+        0
+    );
+
+}
+
 
 function updateCart(){
 
@@ -2182,21 +2259,8 @@ function updateCart(){
 }
 
 
-function cartTotal(){
-
-    return cart.reduce(
-        (total,item) =>
-        total +
-        item.price *
-        item.qty,
-        0
-    );
-
-}
-
-
 /* =========================================================
-   OPEN CART
+OPEN CART
 ========================================================= */
 
 function openCart(){
@@ -2210,10 +2274,6 @@ function openCart(){
 }
 
 
-/* =========================================================
-   CLOSE CART
-========================================================= */
-
 function closeCart(){
 
     closeOverlay(
@@ -2224,7 +2284,7 @@ function closeCart(){
 
 
 /* =========================================================
-   RENDER CART
+RENDER CART
 ========================================================= */
 
 function renderCart(){
@@ -2312,10 +2372,6 @@ function renderCart(){
 }
 
 
-/* =========================================================
-   CHANGE QUANTITY
-========================================================= */
-
 function changeQty(id,amount){
 
     const item =
@@ -2354,7 +2410,7 @@ function changeQty(id,amount){
 
 
 /* =========================================================
-   OVERLAY
+OVERLAY
 ========================================================= */
 
 function openOverlay(id){
@@ -2376,10 +2432,12 @@ function closeOverlay(id){
         .getElementById(id)
         .classList.remove("show");
 
+
     const anyOpen =
         document.querySelector(
             ".overlay.show"
         );
+
 
     if(!anyOpen){
 
@@ -2393,7 +2451,7 @@ function closeOverlay(id){
 
 
 /* =========================================================
-   CHECKOUT
+CHECKOUT
 ========================================================= */
 
 function openCheckout(){
@@ -2402,6 +2460,24 @@ function openCheckout(){
 
         showToast(
             "Please add items first."
+        );
+
+        return;
+
+    }
+
+
+    /*
+    VERY IMPORTANT:
+
+    Customer must come through
+    Table 1-5 QR code.
+    */
+
+    if(!currentTable){
+
+        showToast(
+            "Please scan your table QR code first."
         );
 
         return;
@@ -2419,36 +2495,11 @@ function openCheckout(){
         cartTotal();
 
 
-    const manualBox =
-        document.getElementById(
-            "directTableBox"
-        );
-
-
-    if(currentTable){
-
-        manualBox.classList.add(
-            "hidden"
-        );
-
-        document.getElementById(
-            "checkoutTable"
-        ).textContent =
-            "Table " +
-            currentTable;
-
-    }else{
-
-        manualBox.classList.remove(
-            "hidden"
-        );
-
-        document.getElementById(
-            "checkoutTable"
-        ).textContent =
-            "Select Table";
-
-    }
+    document.getElementById(
+        "checkoutTable"
+    ).textContent =
+        "Table " +
+        currentTable;
 
 
     openOverlay(
@@ -2457,10 +2508,6 @@ function openCheckout(){
 
 }
 
-
-/* =========================================================
-   CLOSE CHECKOUT
-========================================================= */
 
 function closeCheckout(){
 
@@ -2472,7 +2519,7 @@ function closeCheckout(){
 
 
 /* =========================================================
-   PLACE ORDER
+PLACE ORDER
 ========================================================= */
 
 async function placeOrder(){
@@ -2488,30 +2535,17 @@ async function placeOrder(){
     }
 
 
-    let table =
-        currentTable;
+    /*
+    TABLE IS REQUIRED
+    */
 
+    if(!currentTable){
 
-    if(!table){
+        showToast(
+            "Table number is missing. Please scan QR."
+        );
 
-        table =
-            document.getElementById(
-                "manualTable"
-            ).value.trim();
-
-
-        if(
-            !table ||
-            !/^\d+$/.test(table)
-        ){
-
-            showToast(
-                "Please enter a valid table number."
-            );
-
-            return;
-
-        }
+        return;
 
     }
 
@@ -2584,10 +2618,21 @@ async function placeOrder(){
             cartTotal();
 
 
+        /*
+        THIS IS THE IMPORTANT DATA:
+
+        table = currentTable
+
+        Therefore Table 4 QR
+        creates:
+
+        table: "4"
+        */
+
         const order = {
 
             table:
-                String(table),
+                String(currentTable),
 
             customerUid:
                 auth.currentUser.uid,
@@ -2653,10 +2698,6 @@ async function placeOrder(){
             result.id;
 
 
-        currentTable =
-            String(table);
-
-
         cart = [];
 
 
@@ -2669,14 +2710,13 @@ async function placeOrder(){
         openPayment(
             result.id,
             total,
-            table
+            currentTable
         );
 
 
     }catch(error){
 
         console.error(
-            "Order error:",
             error
         );
 
@@ -2696,7 +2736,7 @@ async function placeOrder(){
 
 
 /* =========================================================
-   PAYMENT
+PAYMENT
 ========================================================= */
 
 function openPayment(
@@ -2709,7 +2749,10 @@ function openPayment(
         "paymentOrderNumber"
     ).textContent =
         orderId
-        .substring(0,8)
+        .substring(
+            0,
+            8
+        )
         .toUpperCase();
 
 
@@ -2774,8 +2817,9 @@ function openPayment(
                 color:#ffb95e;
                 "
             >
-                Please configure your UPI ID
-                before accepting payments.
+
+                ⚠️ Please configure your UPI ID.
+
             </div>
 
         `;
@@ -2811,10 +2855,6 @@ function openPayment(
 }
 
 
-/* =========================================================
-   CLOSE PAYMENT
-========================================================= */
-
 function closePayment(){
 
     closeOverlay(
@@ -2825,7 +2865,7 @@ function closePayment(){
 
 
 /* =========================================================
-   MARK PAID
+CUSTOMER MARK PAYMENT
 ========================================================= */
 
 async function markPaid(){
@@ -2860,7 +2900,9 @@ async function markPaid(){
 
     }catch(error){
 
-        console.error(error);
+        console.error(
+            error
+        );
 
         showToast(
             "Could not update payment."
@@ -2872,7 +2914,7 @@ async function markPaid(){
 
 
 /* =========================================================
-   TRACK ORDER
+TRACK ORDER
 ========================================================= */
 
 function trackOrder(){
@@ -2891,7 +2933,10 @@ function trackOrder(){
         "statusOrderNumber"
     ).textContent =
         currentOrderId
-        .substring(0,8)
+        .substring(
+            0,
+            8
+        )
         .toUpperCase();
 
 
@@ -2965,10 +3010,6 @@ function trackOrder(){
 }
 
 
-/* =========================================================
-   CLOSE STATUS
-========================================================= */
-
 function closeStatus(){
 
     closeOverlay(
@@ -2988,7 +3029,7 @@ function closeStatus(){
 
 
 /* =========================================================
-   ADMIN LOGIN
+ADMIN LOGIN
 ========================================================= */
 
 async function adminLogin(){
@@ -3083,7 +3124,6 @@ async function adminLogin(){
     }catch(error){
 
         console.error(
-            "Admin login error:",
             error
         );
 
@@ -3097,7 +3137,7 @@ async function adminLogin(){
 
 
 /* =========================================================
-   ADMIN LOGOUT
+ADMIN LOGOUT
 ========================================================= */
 
 async function adminLogout(){
@@ -3140,7 +3180,7 @@ async function adminLogout(){
 
 
 /* =========================================================
-   LOAD ORDERS
+LOAD ORDERS
 ========================================================= */
 
 function loadOrders(){
@@ -3156,9 +3196,7 @@ function loadOrders(){
     }
 
 
-    if(
-        !auth.currentUser
-    ){
+    if(!auth.currentUser){
 
         showToast(
             "Please login first."
@@ -3208,7 +3246,6 @@ function loadOrders(){
             error => {
 
                 console.error(
-                    "Orders listener error:",
                     error
                 );
 
@@ -3223,7 +3260,7 @@ function loadOrders(){
 
 
 /* =========================================================
-   RENDER ORDERS
+RENDER ADMIN ORDERS
 ========================================================= */
 
 function renderOrders(
@@ -3440,7 +3477,6 @@ function renderOrders(
                                             )}
 
                                             ×
-
                                             ${item.qty}
 
                                         </span>
@@ -3480,7 +3516,6 @@ function renderOrders(
                             >
 
                                 📝
-
                                 ${escapeHTML(
                                     order.note
                                 )}
@@ -3610,7 +3645,7 @@ function renderOrders(
 
 
 /* =========================================================
-   UPDATE STATUS
+UPDATE ORDER STATUS
 ========================================================= */
 
 async function updateStatus(
@@ -3659,7 +3694,7 @@ async function updateStatus(
 
 
 /* =========================================================
-   VERIFY PAYMENT
+VERIFY PAYMENT
 ========================================================= */
 
 async function verifyPayment(
@@ -3711,7 +3746,7 @@ async function verifyPayment(
 
 
 /* =========================================================
-   PRINT BILL
+PRINT BILL
 ========================================================= */
 
 async function printBill(
@@ -3719,6 +3754,10 @@ async function printBill(
 ){
 
     if(!firebaseReady){
+
+        showToast(
+            "Firebase is not configured."
+        );
 
         return;
 
@@ -3807,12 +3846,12 @@ async function printBill(
 
 <head>
 
-<title>
-NOIRÉ Bill
-</title>
+<title>NOIRÉ Café Bill</title>
 
-<meta name="viewport"
-content="width=device-width,initial-scale=1">
+<meta
+name="viewport"
+content="width=device-width,initial-scale=1"
+>
 
 <style>
 
@@ -3841,6 +3880,20 @@ h1{
 .center{
 
     text-align:center;
+
+}
+
+.info{
+
+    line-height:1.8;
+
+}
+
+.table-title{
+
+    font-size:28px;
+
+    font-weight:bold;
 
 }
 
@@ -3877,9 +3930,11 @@ td{
 
 }
 
-.info{
+.payment{
 
-    line-height:1.8;
+    margin-top:30px;
+
+    text-align:center;
 
 }
 
@@ -3905,13 +3960,11 @@ NOIRÉ CAFÉ
 
 <div class="center info">
 
-    <p>
-        <strong>
-        Table ${escapeHTML(
+    <div class="table-title">
+        TABLE ${escapeHTML(
             order.table || "-"
         )}
-        </strong>
-    </p>
+    </div>
 
     <p>
         Order #${orderNumber}
@@ -3939,27 +3992,17 @@ NOIRÉ CAFÉ
 
 </div>
 
+
 <table>
 
 <thead>
 
 <tr>
 
-<th>
-Item
-</th>
-
-<th>
-Qty
-</th>
-
-<th>
-Price
-</th>
-
-<th>
-Total
-</th>
+<th>Item</th>
+<th>Qty</th>
+<th>Price</th>
+<th>Total</th>
 
 </tr>
 
@@ -3984,12 +4027,10 @@ Total:
 </div>
 
 
-<div
-class="center"
-style="margin-top:40px"
->
+<div class="payment">
 
 Payment:
+
 <strong>
 ${formatPayment(
     order.paymentStatus
@@ -4005,7 +4046,7 @@ style="margin-top:50px"
 >
 
 Thank you for visiting
-NOIRÉ Café.
+NOIRÉ Café ❤️
 
 </p>
 
@@ -4037,7 +4078,7 @@ window.onload=function(){
         if(!billWindow){
 
             showToast(
-                "Please allow popups to print the bill."
+                "Please allow popups."
             );
 
             return;
@@ -4068,12 +4109,23 @@ window.onload=function(){
 
 
 /* =========================================================
-   TABLE QR URL
+CREATE TABLE QR URL
 ========================================================= */
 
 function createTableQRURL(
     table
 ){
+
+    /*
+    IMPORTANT:
+
+    This automatically uses your
+    current GitHub Pages URL.
+
+    Example:
+
+    https://prashantpatil6776-ops.github.io/tea-cafe/?table=1
+    */
 
     return (
         window.location.origin +
@@ -4088,33 +4140,10 @@ function createTableQRURL(
 
 
 /* =========================================================
-   GENERATE TABLE QRs
+GENERATE EXACTLY 5 QR CODES
 ========================================================= */
 
 function generateQRs(){
-
-    const count =
-        parseInt(
-            document.getElementById(
-                "tableCount"
-            ).value
-        );
-
-
-    if(
-        !count ||
-        count < 1 ||
-        count > 200
-    ){
-
-        showToast(
-            "Enter 1 to 200 tables."
-        );
-
-        return;
-
-    }
-
 
     const grid =
         document.getElementById(
@@ -4122,12 +4151,19 @@ function generateQRs(){
         );
 
 
+    if(!grid){
+
+        return;
+
+    }
+
+
     grid.innerHTML = "";
 
 
     for(
         let table = 1;
-        table <= count;
+        table <= TOTAL_TABLES;
         table++
     ){
 
@@ -4181,10 +4217,16 @@ function generateQRs(){
                     url,
 
                 width:
-                    180,
+                    210,
 
                 height:
-                    180,
+                    210,
+
+                colorDark:
+                    "#000000",
+
+                colorLight:
+                    "#ffffff",
 
                 correctLevel:
                     QRCode.CorrectLevel.H
@@ -4214,7 +4256,7 @@ function generateQRs(){
 
 
         download.textContent =
-            "Download Table " +
+            "↓ Download Table " +
             table +
             " QR";
 
@@ -4233,13 +4275,16 @@ function generateQRs(){
             title
         );
 
+
         card.appendChild(
             qr
         );
 
+
         card.appendChild(
             urlText
         );
+
 
         card.appendChild(
             download
@@ -4252,17 +4297,11 @@ function generateQRs(){
 
     }
 
-
-    showToast(
-        count +
-        " table QR codes created."
-    );
-
 }
 
 
 /* =========================================================
-   DOWNLOAD QR
+DOWNLOAD QR
 ========================================================= */
 
 function downloadQR(
@@ -4324,37 +4363,141 @@ function downloadQR(
     }
 
 
-    const link =
+    /*
+    Create a beautiful
+    printable QR image.
+    */
+
+    const output =
         document.createElement(
-            "a"
+            "canvas"
         );
 
 
-    link.download =
-        "NOIRE-TABLE-" +
-        table +
-        "-QR.png";
+    output.width =
+        1200;
+
+    output.height =
+        1400;
 
 
-    link.href =
-        dataURL;
+    const ctx =
+        output.getContext(
+            "2d"
+        );
 
 
-    document.body.appendChild(
-        link
+    ctx.fillStyle =
+        "#ffffff";
+
+    ctx.fillRect(
+        0,
+        0,
+        output.width,
+        output.height
     );
 
 
-    link.click();
+    const qrImage =
+        new Image();
 
 
-    link.remove();
+    qrImage.onload =
+        function(){
+
+            ctx.textAlign =
+                "center";
+
+
+            ctx.fillStyle =
+                "#111111";
+
+
+            ctx.font =
+                "bold 60px Arial";
+
+
+            ctx.fillText(
+                "NOIRÉ CAFÉ",
+                600,
+                110
+            );
+
+
+            ctx.font =
+                "bold 80px Arial";
+
+
+            ctx.fillText(
+                "TABLE " + table,
+                600,
+                220
+            );
+
+
+            ctx.drawImage(
+                qrImage,
+                150,
+                280,
+                900,
+                900
+            );
+
+
+            ctx.font =
+                "32px Arial";
+
+
+            ctx.fillStyle =
+                "#555";
+
+
+            ctx.fillText(
+                "Scan to view menu & order",
+                600,
+                1280
+            );
+
+
+            const link =
+                document.createElement(
+                    "a"
+                );
+
+
+            link.download =
+                "NOIRE-TABLE-" +
+                table +
+                "-QR.png";
+
+
+            link.href =
+                output.toDataURL(
+                    "image/png"
+                );
+
+
+            document.body.appendChild(
+                link
+            );
+
+
+            link.click();
+
+
+            link.remove();
+
+        };
+
+
+    qrImage.src =
+        dataURL;
 
 }
 
 
 /* =========================================================
-   STATUS TEXT
+STATUS
 ========================================================= */
 
 function formatStatus(
@@ -4391,7 +4534,7 @@ function formatStatus(
 
 
 /* =========================================================
-   PAYMENT TEXT
+PAYMENT STATUS
 ========================================================= */
 
 function formatPayment(
@@ -4422,7 +4565,7 @@ function formatPayment(
 
 
 /* =========================================================
-   ESCAPE HTML
+ESCAPE HTML
 ========================================================= */
 
 function escapeHTML(
@@ -4457,7 +4600,7 @@ function escapeHTML(
 
 
 /* =========================================================
-   TOAST
+TOAST
 ========================================================= */
 
 function showToast(
@@ -4500,7 +4643,7 @@ function showToast(
 
 
 /* =========================================================
-   INITIALIZE
+INITIALIZE
 ========================================================= */
 
 document.addEventListener(
@@ -4515,18 +4658,7 @@ document.addEventListener(
 
 
         /*
-            IMPORTANT:
-
-            If URL contains:
-
-            ?table=5
-
-            customer opens directly
-            on Table 5.
-
-            If there is no table:
-
-            normal digital menu opens.
+        Read table from QR URL.
         */
 
         const table =
@@ -4538,18 +4670,18 @@ document.addEventListener(
         );
 
 
+        /*
+        Always open Menu.
+        */
+
         showPage(
             "menu"
         );
 
 
         /*
-            If someone visits:
-
-            /tea-cafe/?table=5
-
-            browser URL itself identifies
-            the table.
+        Change browser title
+        for table-specific URLs.
         */
 
         if(table){
@@ -4567,4 +4699,3 @@ document.addEventListener(
 
 </body>
 </html>
-
