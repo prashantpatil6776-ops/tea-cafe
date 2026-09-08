@@ -31,6 +31,7 @@
     --border:rgba(212,175,99,.22);
     --danger:#ef6a6a;
     --success:#62d99b;
+    --warning:#efc16d;
     --shadow:0 20px 60px rgba(0,0,0,.45);
 }
 
@@ -75,7 +76,7 @@ button{
     position:sticky;
     top:0;
     z-index:1000;
-    height:76px;
+    min-height:76px;
     display:flex;
     align-items:center;
     justify-content:space-between;
@@ -577,6 +578,7 @@ button{
     padding:14px;
     margin-bottom:20px;
     color:var(--gold-light);
+    word-break:break-word;
 }
 
 .upi-qr{
@@ -600,11 +602,12 @@ button{
     display:flex;
     align-items:center;
     padding:40px 20px;
-    overflow: hidden;
+    overflow:visible;
 }
 
 .login-card{
     width:min(450px,100%);
+    margin:auto;
     background:#111;
     border:1px solid var(--border);
     border-radius:25px;
@@ -637,6 +640,7 @@ button{
 /* ================= DASHBOARD ================= */
 
 .dashboard{
+    width:100%;
     max-width:1300px;
     margin:auto;
     padding:50px 5% 100px;
@@ -688,17 +692,37 @@ button{
     margin-top:8px;
 }
 
+/* IMPORTANT MOBILE TABLE FIX */
+
 .orders-wrap{
+    width:100%;
+    max-width:100%;
     background:#111;
     border:1px solid rgba(255,255,255,.07);
     border-radius:20px;
-    overflow:auto;
+    overflow-x:auto;
+    overflow-y:hidden;
+    -webkit-overflow-scrolling:touch;
+}
+
+.orders-wrap::-webkit-scrollbar{
+    height:7px;
+}
+
+.orders-wrap::-webkit-scrollbar-track{
+    background:#151515;
+    border-radius:20px;
+}
+
+.orders-wrap::-webkit-scrollbar-thumb{
+    background:var(--gold-dark);
+    border-radius:20px;
 }
 
 .orders-table{
     width:100%;
     border-collapse:collapse;
-    min-width:900px;
+    min-width:1250px;
 }
 
 .orders-table th,
@@ -706,6 +730,7 @@ button{
     padding:16px;
     text-align:left;
     border-bottom:1px solid rgba(255,255,255,.07);
+    white-space:nowrap;
 }
 
 .orders-table th{
@@ -718,6 +743,7 @@ button{
 .orders-table td{
     color:#ddd;
     font-size:13px;
+    vertical-align:middle;
 }
 
 .status-select{
@@ -726,6 +752,103 @@ button{
     color:#fff;
     border:1px solid #333;
     border-radius:8px;
+    min-width:120px;
+}
+
+/* PAYMENT BADGES */
+
+.payment-badge{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    padding:6px 10px;
+    border-radius:999px;
+    font-size:10px;
+    font-weight:700;
+    text-transform:uppercase;
+    letter-spacing:.5px;
+}
+
+.payment-unpaid{
+    color:#efc16d;
+    background:rgba(239,193,109,.08);
+    border:1px solid rgba(239,193,109,.2);
+}
+
+.payment-submitted{
+    color:#f3d98b;
+    background:rgba(212,175,99,.12);
+    border:1px solid rgba(212,175,99,.3);
+}
+
+.payment-paid{
+    color:#62d99b;
+    background:rgba(98,217,155,.08);
+    border:1px solid rgba(98,217,155,.22);
+}
+
+.payment-rejected{
+    color:#ef6a6a;
+    background:rgba(239,106,106,.08);
+    border:1px solid rgba(239,106,106,.22);
+}
+
+/* PAYMENT ADMIN ACTIONS */
+
+.payment-actions{
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+    min-width:145px;
+}
+
+.verify-payment-btn,
+.reject-payment-btn,
+.remove-order-btn{
+    border-radius:8px;
+    padding:8px 10px;
+    font-size:11px;
+    font-weight:700;
+    transition:.2s ease;
+}
+
+.verify-payment-btn{
+    border:1px solid rgba(98,217,155,.35);
+    background:rgba(98,217,155,.08);
+    color:var(--success);
+}
+
+.verify-payment-btn:hover{
+    background:var(--success);
+    color:#07130d;
+}
+
+.reject-payment-btn{
+    border:1px solid rgba(239,106,106,.35);
+    background:rgba(239,106,106,.07);
+    color:#ef8c8c;
+}
+
+.reject-payment-btn:hover{
+    background:var(--danger);
+    color:#fff;
+}
+
+.remove-order-btn{
+    border:1px solid rgba(239,106,106,.45);
+    background:#351313;
+    color:#ff8c8c;
+}
+
+.remove-order-btn:hover{
+    background:#671c1c;
+    color:#fff;
+}
+
+.paid-confirmation{
+    color:var(--success);
+    font-size:11px;
+    font-weight:700;
 }
 
 /* ================= QR ================= */
@@ -793,6 +916,8 @@ button{
     font-size:13px;
     font-weight:600;
     transition:.3s;
+    max-width:90%;
+    text-align:center;
 }
 
 .toast.show{
@@ -811,6 +936,7 @@ button{
 /* ================= RESPONSIVE ================= */
 
 @media(max-width:950px){
+
     .menu-grid{
         grid-template-columns:repeat(2,1fr);
     }
@@ -818,6 +944,7 @@ button{
     .stats-grid{
         grid-template-columns:repeat(2,1fr);
     }
+
 }
 
 @media(max-width:650px){
@@ -872,6 +999,10 @@ button{
         grid-template-columns:1fr 1fr;
     }
 
+    .dashboard{
+        padding:35px 4% 80px;
+    }
+
     .dashboard-top{
         align-items:flex-start;
         flex-direction:column;
@@ -879,6 +1010,20 @@ button{
 
     .dashboard-top h1{
         font-size:38px;
+    }
+
+    .orders-wrap{
+        border-radius:14px;
+        width:100%;
+    }
+
+    .orders-table{
+        min-width:1250px;
+    }
+
+    .orders-table th,
+    .orders-table td{
+        padding:12px;
     }
 
     .modal{
@@ -892,6 +1037,31 @@ button{
     .cart-floating{
         right:18px;
         bottom:18px;
+    }
+
+}
+
+@media(max-width:400px){
+
+    .logo{
+        font-size:20px;
+    }
+
+    .header-btn{
+        padding:7px 9px;
+        font-size:11px;
+    }
+
+    .stats-grid{
+        gap:10px;
+    }
+
+    .stat-card{
+        padding:16px;
+    }
+
+    .stat-card strong{
+        font-size:22px;
     }
 
 }
@@ -917,7 +1087,6 @@ button{
             Menu
         </button>
 
-        <!-- Visible to normal users -->
         <button
             id="loginHeaderButton"
             class="header-btn"
@@ -926,7 +1095,6 @@ button{
             Login
         </button>
 
-        <!-- Visible ONLY to verified admins -->
         <div
             id="adminOnlyMenu"
             class="admin-only-menu"
@@ -1039,9 +1207,7 @@ button{
 
             <div class="form-group">
 
-                <label>
-                    Email
-                </label>
+                <label>Email</label>
 
                 <input
                     id="adminEmail"
@@ -1054,9 +1220,7 @@ button{
 
             <div class="form-group">
 
-                <label>
-                    Password
-                </label>
+                <label>Password</label>
 
                 <input
                     id="adminPassword"
@@ -1092,6 +1256,7 @@ button{
             <div class="dashboard-top">
 
                 <div>
+
                     <div class="hero-label">
                         Management
                     </div>
@@ -1099,6 +1264,7 @@ button{
                     <h1>
                         Admin Dashboard
                     </h1>
+
                 </div>
 
                 <button
@@ -1164,6 +1330,8 @@ button{
             </div>
 
 
+            <!-- MOBILE HORIZONTAL SCROLL -->
+
             <div class="orders-wrap">
 
                 <table class="orders-table">
@@ -1177,15 +1345,14 @@ button{
                             <th>Items</th>
                             <th>Total</th>
                             <th>Payment</th>
+                            <th>Payment Action</th>
                             <th>Status</th>
                             <th>Time</th>
                         </tr>
 
                     </thead>
 
-                    <tbody id="ordersBody">
-
-                    </tbody>
+                    <tbody id="ordersBody"></tbody>
 
                 </table>
 
@@ -1459,10 +1626,12 @@ button{
             </div>
 
             <div class="upi-id">
+
                 UPI ID:
                 <strong>
                     prashantpatil6776-1@okicici
                 </strong>
+
             </div>
 
             <div
@@ -1471,6 +1640,7 @@ button{
             ></div>
 
             <button
+                id="payWithUPIBtn"
                 class="primary-btn"
                 onclick="openUPI()"
             >
@@ -1478,11 +1648,30 @@ button{
             </button>
 
             <button
+                id="markPaidBtn"
                 class="secondary-btn"
                 onclick="markPaymentDone()"
             >
                 I Have Paid
             </button>
+
+            <div
+                id="paymentWaitingMessage"
+                class="hidden"
+                style="
+                    margin-top:15px;
+                    padding:14px;
+                    border-radius:12px;
+                    background:rgba(212,175,99,.08);
+                    border:1px solid rgba(212,175,99,.2);
+                    color:#f3d98b;
+                    font-size:13px;
+                    line-height:1.6;
+                "
+            >
+                Payment submitted successfully.<br>
+                Please wait for the café to verify your payment.
+            </div>
 
             <p
                 style="
@@ -1492,7 +1681,7 @@ button{
                     line-height:1.6;
                 "
             >
-                On desktop, scan the QR code using your
+                On desktop, scan the UPI QR using your
                 mobile UPI application.
             </p>
 
@@ -1536,11 +1725,7 @@ button{
    FIREBASE
 ========================================================= */
 
-
-
-
-
-    const firebaseConfig = {
+const firebaseConfig = {
     apiKey: "AIzaSyAF89vjUgwWicIHpCNadxPMx31MxJIRiM4",
     authDomain: "noire-cafe.firebaseapp.com",
     projectId: "noire-cafe",
@@ -1549,7 +1734,7 @@ button{
     appId: "1:300147003546:web:e092113f2cbace4542cf23",
     measurementId: "G-M4B7CCFCXR"
 };
-    
+
 let firebaseReady = false;
 
 try{
@@ -1573,6 +1758,7 @@ try{
     );
 
     firebaseReady = false;
+
 }
 
 
@@ -1752,9 +1938,7 @@ function showToast(message){
 
     toast.classList.add("show");
 
-    clearTimeout(
-        window.toastTimer
-    );
+    clearTimeout(window.toastTimer);
 
     window.toastTimer =
         setTimeout(function(){
@@ -1772,12 +1956,6 @@ function showToast(message){
 
 function showPage(page){
 
-    /*
-       IMPORTANT:
-       Admin and QR pages are protected.
-       Login button does NOT use this function.
-    */
-
     if(
         (page === "admin" || page === "qr") &&
         !window.isCurrentUserAdmin
@@ -1788,6 +1966,7 @@ function showPage(page){
         );
 
         page = "menu";
+
     }
 
 
@@ -1834,9 +2013,7 @@ function openAdminLogin(){
 
 
     const adminPage =
-        document.getElementById(
-            "adminPage"
-        );
+        document.getElementById("adminPage");
 
 
     if(adminPage){
@@ -1858,9 +2035,8 @@ function openAdminLogin(){
 function renderCategories(){
 
     const container =
-        document.getElementById(
-            "categories"
-        );
+        document.getElementById("categories");
+
 
     const categories = [
         "All",
@@ -1911,9 +2087,7 @@ function filterCategory(category){
 function renderMenu(){
 
     const container =
-        document.getElementById(
-            "menuGrid"
-        );
+        document.getElementById("menuGrid");
 
 
     const items =
@@ -1935,6 +2109,7 @@ function renderMenu(){
         `;
 
         return;
+
     }
 
 
@@ -1943,9 +2118,7 @@ function renderMenu(){
 
             return `
 
-                <article
-                    class="food-card"
-                >
+                <article class="food-card">
 
                     <div class="food-icon">
                         ${item.icon}
@@ -2023,9 +2196,7 @@ function addToCart(id){
 
 
     if(!item){
-
         return;
-
     }
 
 
@@ -2082,7 +2253,7 @@ function removeFromCart(id){
 }
 
 
-function changeQty(id, amount){
+function changeQty(id,amount){
 
     const item =
         cart.find(
@@ -2092,9 +2263,7 @@ function changeQty(id, amount){
 
 
     if(!item){
-
         return;
-
     }
 
 
@@ -2146,9 +2315,8 @@ function getCartTotal(){
 function updateCart(){
 
     const count =
-        document.getElementById(
-            "cartCount"
-        );
+        document.getElementById("cartCount");
+
 
     count.textContent =
         getCartCount();
@@ -2162,14 +2330,11 @@ function updateCart(){
 function renderCart(){
 
     const container =
-        document.getElementById(
-            "cartItems"
-        );
+        document.getElementById("cartItems");
+
 
     const summary =
-        document.getElementById(
-            "cartSummary"
-        );
+        document.getElementById("cartSummary");
 
 
     if(!cart.length){
@@ -2359,26 +2524,20 @@ function getTableFromURL(){
 function setTable(table){
 
     const heroTable =
-        document.getElementById(
-            "heroTable"
-        );
+        document.getElementById("heroTable");
+
 
     const heroNumber =
-        document.getElementById(
-            "heroTableNumber"
-        );
+        document.getElementById("heroTableNumber");
+
 
     const checkoutTable =
-        document.getElementById(
-            "checkoutTable"
-        );
+        document.getElementById("checkoutTable");
 
 
     if(table){
 
-        heroTable.classList.remove(
-            "hidden"
-        );
+        heroTable.classList.remove("hidden");
 
         heroNumber.textContent =
             table;
@@ -2388,9 +2547,7 @@ function setTable(table){
 
     }else{
 
-        heroTable.classList.add(
-            "hidden"
-        );
+        heroTable.classList.add("hidden");
 
     }
 
@@ -2436,9 +2593,7 @@ function openCheckout(){
     }
 
 
-    openModal(
-        "checkoutModal"
-    );
+    openModal("checkoutModal");
 
 }
 
@@ -2644,14 +2799,10 @@ async function placeOrder(){
             docRef.id;
 
 
-        closeModal(
-            "checkoutModal"
-        );
+        closeModal("checkoutModal");
 
 
-        openPayment(
-            total
-        );
+        openPayment(total);
 
 
         console.log(
@@ -2692,24 +2843,16 @@ function openPayment(amount){
     const upiLink =
         "upi://pay?" +
         "pa=" +
-        encodeURIComponent(
-            UPI_ID
-        ) +
+        encodeURIComponent(UPI_ID) +
         "&pn=" +
-        encodeURIComponent(
-            CAFE_NAME
-        ) +
+        encodeURIComponent(CAFE_NAME) +
         "&am=" +
-        encodeURIComponent(
-            amount
-        ) +
+        encodeURIComponent(amount) +
         "&cu=INR";
 
 
     const qrContainer =
-        document.getElementById(
-            "upiQR"
-        );
+        document.getElementById("upiQR");
 
 
     qrContainer.innerHTML = "";
@@ -2736,9 +2879,22 @@ function openPayment(amount){
         upiLink;
 
 
-    openModal(
-        "paymentModal"
-    );
+    document
+        .getElementById("payWithUPIBtn")
+        .classList.remove("hidden");
+
+
+    document
+        .getElementById("markPaidBtn")
+        .classList.remove("hidden");
+
+
+    document
+        .getElementById("paymentWaitingMessage")
+        .classList.add("hidden");
+
+
+    openModal("paymentModal");
 
 }
 
@@ -2830,20 +2986,41 @@ async function markPaymentDone(){
         .update({
 
             paymentStatus:
-                "customer_marked_paid"
+                "customer_marked_paid",
+
+            paymentSubmittedAt:
+                firebase.firestore
+                    .FieldValue
+                    .serverTimestamp()
 
         });
 
 
-        closeModal(
-            "paymentModal"
-        );
+        document
+            .getElementById("payWithUPIBtn")
+            .classList.add("hidden");
+
+
+        document
+            .getElementById("markPaidBtn")
+            .classList.add("hidden");
+
+
+        document
+            .getElementById("paymentWaitingMessage")
+            .classList.remove("hidden");
 
 
         showToast(
-            "Payment marked successfully. Order received!"
+            "Payment submitted. Waiting for admin verification."
         );
 
+
+        /*
+            Keep currentOrderId temporarily.
+            The order has already been created,
+            so there is no need to create another order.
+        */
 
         cart = [];
 
@@ -2851,7 +3028,14 @@ async function markPaymentDone(){
 
         updateCart();
 
-        currentOrderId = null;
+
+        setTimeout(function(){
+
+            closeModal("paymentModal");
+
+            currentOrderId = null;
+
+        },1800);
 
 
     }catch(error){
@@ -2896,24 +3080,13 @@ async function checkAdminAccess(user){
 
 
         if(adminMenu){
-
-            adminMenu.style.display =
-                "none";
-
+            adminMenu.style.display = "none";
         }
 
 
         if(loginButton){
-
-            loginButton.style.display =
-                "inline-block";
-
+            loginButton.style.display = "inline-block";
         }
-
-
-        console.log(
-            "👤 No user logged in"
-        );
 
 
         return false;
@@ -2940,29 +3113,17 @@ async function checkAdminAccess(user){
 
 
             if(adminMenu){
-
-                adminMenu.style.display =
-                    "flex";
-
+                adminMenu.style.display = "flex";
             }
 
 
             if(loginButton){
-
-                loginButton.style.display =
-                    "none";
-
+                loginButton.style.display = "none";
             }
 
 
             console.log(
                 "✅ ADMIN VERIFIED"
-            );
-
-
-            console.log(
-                "Admin UID:",
-                user.uid
             );
 
 
@@ -2976,24 +3137,13 @@ async function checkAdminAccess(user){
 
 
         if(adminMenu){
-
-            adminMenu.style.display =
-                "none";
-
+            adminMenu.style.display = "none";
         }
 
 
         if(loginButton){
-
-            loginButton.style.display =
-                "inline-block";
-
+            loginButton.style.display = "inline-block";
         }
-
-
-        console.log(
-            "👤 Normal customer user"
-        );
 
 
         return false;
@@ -3012,18 +3162,12 @@ async function checkAdminAccess(user){
 
 
         if(adminMenu){
-
-            adminMenu.style.display =
-                "none";
-
+            adminMenu.style.display = "none";
         }
 
 
         if(loginButton){
-
-            loginButton.style.display =
-                "inline-block";
-
+            loginButton.style.display = "inline-block";
         }
 
 
@@ -3093,12 +3237,6 @@ async function adminLogin(){
         );
 
 
-        console.log(
-            "UID:",
-            user.uid
-        );
-
-
         const adminDoc =
             await db
             .collection("admins")
@@ -3113,9 +3251,7 @@ async function adminLogin(){
 
             await auth.signOut();
 
-
-            window.isCurrentUserAdmin =
-                false;
+            window.isCurrentUserAdmin = false;
 
 
             const adminMenu =
@@ -3131,18 +3267,12 @@ async function adminLogin(){
 
 
             if(adminMenu){
-
-                adminMenu.style.display =
-                    "none";
-
+                adminMenu.style.display = "none";
             }
 
 
             if(loginButton){
-
-                loginButton.style.display =
-                    "inline-block";
-
+                loginButton.style.display = "inline-block";
             }
 
 
@@ -3173,33 +3303,23 @@ async function adminLogin(){
 
 
         if(adminMenu){
-
-            adminMenu.style.display =
-                "flex";
-
+            adminMenu.style.display = "flex";
         }
 
 
         if(loginButton){
-
-            loginButton.style.display =
-                "none";
-
+            loginButton.style.display = "none";
         }
 
 
         document.getElementById(
             "loginBox"
-        ).classList.add(
-            "hidden"
-        );
+        ).classList.add("hidden");
 
 
         document.getElementById(
             "dashboard"
-        ).classList.remove(
-            "hidden"
-        );
+        ).classList.remove("hidden");
 
 
         showPage("admin");
@@ -3210,11 +3330,6 @@ async function adminLogin(){
 
         showToast(
             "Welcome Admin! 👑"
-        );
-
-
-        console.log(
-            "👑 ADMIN LOGIN SUCCESS"
         );
 
 
@@ -3284,16 +3399,11 @@ async function adminLogin(){
 
 
         if(errorBox){
-
-            errorBox.textContent =
-                message;
-
+            errorBox.textContent = message;
         }
 
 
-        showToast(
-            message
-        );
+        showToast(message);
 
     }
 
@@ -3309,9 +3419,7 @@ async function adminLogout(){
     try{
 
         if(firebaseReady){
-
             await auth.signOut();
-
         }
 
 
@@ -3332,18 +3440,12 @@ async function adminLogout(){
 
 
         if(adminMenu){
-
-            adminMenu.style.display =
-                "none";
-
+            adminMenu.style.display = "none";
         }
 
 
         if(loginButton){
-
-            loginButton.style.display =
-                "inline-block";
-
+            loginButton.style.display = "inline-block";
         }
 
 
@@ -3358,16 +3460,12 @@ async function adminLogout(){
 
         document.getElementById(
             "loginBox"
-        ).classList.remove(
-            "hidden"
-        );
+        ).classList.remove("hidden");
 
 
         document.getElementById(
             "dashboard"
-        ).classList.add(
-            "hidden"
-        );
+        ).classList.add("hidden");
 
 
         showPage("menu");
@@ -3397,9 +3495,7 @@ async function adminLogout(){
 function loadOrders(){
 
     if(!firebaseReady){
-
         return;
-
     }
 
 
@@ -3433,8 +3529,7 @@ function loadOrders(){
         .onSnapshot(
             function(snapshot){
 
-                const orders =
-                    [];
+                const orders = [];
 
 
                 snapshot.forEach(
@@ -3452,9 +3547,7 @@ function loadOrders(){
                 );
 
 
-                renderOrders(
-                    orders
-                );
+                renderOrders(orders);
 
             },
             function(error){
@@ -3471,6 +3564,394 @@ function loadOrders(){
 
             }
         );
+
+}
+
+
+/* =========================================================
+   PAYMENT STATUS LABEL
+========================================================= */
+
+function getPaymentStatusHTML(paymentStatus){
+
+    const status =
+        paymentStatus || "unpaid";
+
+
+    if(status === "paid"){
+
+        return `
+            <span class="payment-badge payment-paid">
+                PAID ✓
+            </span>
+        `;
+
+    }
+
+
+    if(status === "customer_marked_paid"){
+
+        return `
+            <span class="payment-badge payment-submitted">
+                PAYMENT SUBMITTED
+            </span>
+        `;
+
+    }
+
+
+    if(status === "payment_rejected"){
+
+        return `
+            <span class="payment-badge payment-rejected">
+                REJECTED
+            </span>
+        `;
+
+    }
+
+
+    return `
+        <span class="payment-badge payment-unpaid">
+            UNPAID
+        </span>
+    `;
+
+}
+
+
+/* =========================================================
+   PAYMENT ADMIN ACTIONS
+========================================================= */
+
+function getPaymentActions(order){
+
+    const paymentStatus =
+        order.paymentStatus || "unpaid";
+
+
+    /*
+       CUSTOMER CLAIMED PAYMENT
+       Admin can verify or reject.
+    */
+
+    if(paymentStatus === "customer_marked_paid"){
+
+        return `
+
+            <div class="payment-actions">
+
+                <button
+                    class="verify-payment-btn"
+                    onclick="verifyPayment('${order.id}','paid')"
+                >
+                    ✓ Verify Payment
+                </button>
+
+                <button
+                    class="reject-payment-btn"
+                    onclick="verifyPayment('${order.id}','payment_rejected')"
+                >
+                    ✕ Reject
+                </button>
+
+            </div>
+
+        `;
+
+    }
+
+
+    /*
+       VERIFIED PAID
+       Admin can remove the order.
+    */
+
+    if(paymentStatus === "paid"){
+
+        return `
+
+            <div class="payment-actions">
+
+                <div class="paid-confirmation">
+                    ✓ Payment Verified
+                </div>
+
+                <button
+                    class="remove-order-btn"
+                    onclick="removeOrder('${order.id}')"
+                >
+                    🗑 Remove Order
+                </button>
+
+            </div>
+
+        `;
+
+    }
+
+
+    /*
+       REJECTED
+       Admin can remove the rejected order
+       or wait for customer to pay again.
+    */
+
+    if(paymentStatus === "payment_rejected"){
+
+        return `
+
+            <div class="payment-actions">
+
+                <div style="
+                    color:#ef8c8c;
+                    font-size:11px;
+                    font-weight:700;
+                ">
+                    Payment Rejected
+                </div>
+
+                <button
+                    class="remove-order-btn"
+                    onclick="removeOrder('${order.id}')"
+                >
+                    🗑 Remove Order
+                </button>
+
+            </div>
+
+        `;
+
+    }
+
+
+    return `
+
+        <span style="
+            color:#777;
+            font-size:11px;
+        ">
+            Waiting for payment
+        </span>
+
+    `;
+
+}
+
+
+/* =========================================================
+   VERIFY / REJECT PAYMENT
+========================================================= */
+
+async function verifyPayment(
+    orderId,
+    paymentStatus
+){
+
+    if(!window.isCurrentUserAdmin){
+
+        showToast(
+            "Admin access required."
+        );
+
+        return;
+
+    }
+
+
+    if(
+        paymentStatus !== "paid" &&
+        paymentStatus !== "payment_rejected"
+    ){
+
+        showToast(
+            "Invalid payment status."
+        );
+
+        return;
+
+    }
+
+
+    const message =
+        paymentStatus === "paid"
+        ? "Verify that you received this payment?"
+        : "Reject this payment submission?";
+
+
+    if(!confirm(message)){
+
+        return;
+
+    }
+
+
+    try{
+
+        await db
+        .collection("orders")
+        .doc(orderId)
+        .update({
+
+            paymentStatus:
+                paymentStatus,
+
+            paymentVerifiedAt:
+                firebase.firestore
+                    .FieldValue
+                    .serverTimestamp(),
+
+            paymentVerifiedBy:
+                auth.currentUser.uid
+
+        });
+
+
+        if(paymentStatus === "paid"){
+
+            showToast(
+                "Payment verified successfully. ✓"
+            );
+
+        }else{
+
+            showToast(
+                "Payment rejected."
+            );
+
+        }
+
+
+    }catch(error){
+
+        console.error(
+            "Payment verification error:",
+            error
+        );
+
+
+        showToast(
+            "Could not update payment."
+        );
+
+    }
+
+}
+
+
+/* =========================================================
+   REMOVE ORDER
+========================================================= */
+
+async function removeOrder(orderId){
+
+    if(!window.isCurrentUserAdmin){
+
+        showToast(
+            "Admin access required."
+        );
+
+        return;
+
+    }
+
+
+    if(!orderId){
+
+        showToast(
+            "Order ID missing."
+        );
+
+        return;
+
+    }
+
+
+    try{
+
+        /*
+           Fetch the order first.
+           This prevents the UI button alone
+           from being trusted.
+        */
+
+        const orderRef =
+            db
+            .collection("orders")
+            .doc(orderId);
+
+
+        const orderDoc =
+            await orderRef.get();
+
+
+        if(!orderDoc.exists){
+
+            showToast(
+                "Order no longer exists."
+            );
+
+            return;
+
+        }
+
+
+        const order =
+            orderDoc.data();
+
+
+        /*
+           IMPORTANT:
+           Only verified PAID orders can
+           be removed from the dashboard.
+        */
+
+        if(order.paymentStatus !== "paid"){
+
+            showToast(
+                "Only verified paid orders can be removed."
+            );
+
+            return;
+
+        }
+
+
+        const confirmed =
+            confirm(
+                "Remove this verified paid order permanently?\n\nOrder #" +
+                orderId.slice(0,7)
+            );
+
+
+        if(!confirmed){
+
+            return;
+
+        }
+
+
+        await orderRef.delete();
+
+
+        showToast(
+            "Order removed successfully."
+        );
+
+
+    }catch(error){
+
+        console.error(
+            "Remove order error:",
+            error
+        );
+
+
+        showToast(
+            "Could not remove order."
+        );
+
+    }
 
 }
 
@@ -3518,8 +3999,7 @@ function renderOrders(orders){
     const newCount =
         orders.filter(
             order =>
-                order.status ===
-                "received"
+                order.status === "received"
         ).length;
 
 
@@ -3527,13 +4007,15 @@ function renderOrders(orders){
         newCount;
 
 
+    /*
+       Only VERIFIED payments count
+       as paid orders.
+    */
+
     const paidCount =
         orders.filter(
             order =>
-                order.paymentStatus ===
-                "customer_marked_paid" ||
-                order.paymentStatus ===
-                "paid"
+                order.paymentStatus === "paid"
         ).length;
 
 
@@ -3541,14 +4023,27 @@ function renderOrders(orders){
         paidCount;
 
 
+    /*
+       Revenue counts only verified PAID
+       orders.
+    */
+
     const revenue =
         orders.reduce(
             function(total,order){
 
-                return total +
-                    Number(
-                        order.total || 0
-                    );
+                if(
+                    order.paymentStatus === "paid"
+                ){
+
+                    return total +
+                        Number(
+                            order.total || 0
+                        );
+
+                }
+
+                return total;
 
             },
             0
@@ -3566,7 +4061,7 @@ function renderOrders(orders){
             <tr>
 
                 <td
-                    colspan="8"
+                    colspan="9"
                     style="
                         text-align:center;
                         padding:50px;
@@ -3589,9 +4084,7 @@ function renderOrders(orders){
         orders.map(function(order){
 
             const items =
-                Array.isArray(
-                    order.items
-                )
+                Array.isArray(order.items)
                 ? order.items
                 : [];
 
@@ -3603,8 +4096,7 @@ function renderOrders(orders){
                 ).join(", ");
 
 
-            let time =
-                "—";
+            let time = "—";
 
 
             if(
@@ -3627,14 +4119,22 @@ function renderOrders(orders){
                 <tr>
 
                     <td>
+
                         <strong>
-                            #${order.id.slice(0,7)}
+                            #${escapeHTML(
+                                order.id.slice(0,7)
+                            )}
                         </strong>
+
                     </td>
 
+
                     <td>
-                        Table ${order.table || "-"}
+                        Table ${escapeHTML(
+                            order.table || "-"
+                        )}
                     </td>
+
 
                     <td>
 
@@ -3645,54 +4145,65 @@ function renderOrders(orders){
 
                         <br>
 
-                        <small
-                            style="color:#777;"
-                        >
+                        <small style="color:#777;">
+
                             ${escapeHTML(
                                 order.customerPhone ||
                                 ""
                             )}
+
                         </small>
 
                     </td>
 
-                    <td>
+
+                    <td style="
+                        max-width:250px;
+                        white-space:normal;
+                    ">
+
                         ${escapeHTML(
                             itemsText
                         )}
+
                     </td>
 
+
                     <td>
+
                         ₹${Number(
                             order.total || 0
                         )}
+
                     </td>
 
+
                     <td>
-                        <span
-                            style="
-                                color:${
-                                    order.paymentStatus ===
-                                    'customer_marked_paid' ||
-                                    order.paymentStatus ===
-                                    'paid'
-                                    ? '#62d99b'
-                                    : '#efc16d'
-                                };
-                            "
-                        >
-                            ${escapeHTML(
-                                order.paymentStatus ||
-                                "unpaid"
-                            )}
-                        </span>
+
+                        ${getPaymentStatusHTML(
+                            order.paymentStatus
+                        )}
+
                     </td>
+
+
+                    <td>
+
+                        ${getPaymentActions(
+                            order
+                        )}
+
+                    </td>
+
 
                     <td>
 
                         <select
                             class="status-select"
-                            onchange="updateOrderStatus('${order.id}',this.value)"
+                            onchange="updateOrderStatus(
+                                '${order.id}',
+                                this.value
+                            )"
                         >
 
                             ${getStatusOptions(
@@ -3703,8 +4214,11 @@ function renderOrders(orders){
 
                     </td>
 
+
                     <td>
-                        ${time}
+
+                        ${escapeHTML(time)}
+
                     </td>
 
                 </tr>
@@ -3853,9 +4367,7 @@ function generateTableQR(){
     const qrURL =
         baseURL +
         "?table=" +
-        encodeURIComponent(
-            table
-        );
+        encodeURIComponent(table);
 
 
     const container =
@@ -3945,6 +4457,17 @@ function printQR(){
         );
 
 
+    if(!popup){
+
+        showToast(
+            "Please allow popups to print QR."
+        );
+
+        return;
+
+    }
+
+
     popup.document.write(`
 
         <!DOCTYPE html>
@@ -3954,7 +4477,7 @@ function printQR(){
         <head>
 
             <title>
-                NOIRÉ Café - ${table}
+                NOIRÉ Café - ${escapeHTML(table)}
             </title>
 
             <style>
@@ -4034,26 +4557,11 @@ function printQR(){
 function escapeHTML(value){
 
     return String(value)
-        .replace(
-            /&/g,
-            "&amp;"
-        )
-        .replace(
-            /</g,
-            "&lt;"
-        )
-        .replace(
-            />/g,
-            "&gt;"
-        )
-        .replace(
-            /"/g,
-            "&quot;"
-        )
-        .replace(
-            /'/g,
-            "&#039;"
-        );
+        .replace(/&/g,"&amp;")
+        .replace(/</g,"&lt;")
+        .replace(/>/g,"&gt;")
+        .replace(/"/g,"&quot;")
+        .replace(/'/g,"&#039;");
 
 }
 
@@ -4073,15 +4581,8 @@ if(firebaseReady){
             );
 
 
-            await checkAdminAccess(
-                user
-            );
+            await checkAdminAccess(user);
 
-
-            /*
-                If logged-in user is admin,
-                automatically restore dashboard.
-            */
 
             if(
                 user &&
@@ -4090,23 +4591,20 @@ if(firebaseReady){
 
                 document.getElementById(
                     "loginBox"
-                ).classList.add(
-                    "hidden"
-                );
+                ).classList.add("hidden");
 
 
                 document.getElementById(
                     "dashboard"
-                ).classList.remove(
-                    "hidden"
-                );
+                ).classList.remove("hidden");
 
 
                 /*
-                   Do not force page change if
-                   customer is currently on menu.
-                   Admin state is simply restored.
+                   Restore realtime orders listener
+                   when admin session returns.
                 */
+
+                loadOrders();
 
             }
 
