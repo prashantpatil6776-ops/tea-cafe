@@ -2046,6 +2046,7 @@ const firebaseConfig = {
 };
 
 let firebaseReady = false;
+let firebaseMessaging = null;
 
 try{
 
@@ -2209,7 +2210,6 @@ let ordersListener = null;
 let ordersInitialSnapshotLoaded = false;
 let pendingNotificationOrderId = null;
 let orderAudioContext = null;
-let firebaseMessaging = null;
 const FCM_VAPID_KEY = "BBtn0OgssWXrer4KqZN4nCqIdSc3k5pJ2G1oN-xS-hxO6QgdQ9sjPc61ZVjNwHCVMVgMzSzwE-Kf0_2grw13aVs";
 
 window.isCurrentUserAdmin = false;
