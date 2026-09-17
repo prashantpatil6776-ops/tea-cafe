@@ -793,6 +793,12 @@ button{
     border:1px solid rgba(239,106,106,.22);
 }
 
+.payment-cash{
+    color:#f3d98b;
+    background:rgba(243,217,139,.08);
+    border:1px solid rgba(243,217,139,.22);
+}
+
 /* PAYMENT ADMIN ACTIONS */
 
 .payment-actions{
@@ -1542,7 +1548,21 @@ button{
                     placeholder="Table number"
                 >
 
+            </div> 
+            <div class="form-group full">
+
+                <label>
+                    Payment Method
+                </label>
+
+                <select id="paymentMethod">
+                    <option value="upi">UPI / Online Payment</option>
+                    <option value="cash">Cash at Counter / Table</option>
+                </select>
+
             </div>
+
+
 
             <div class="form-group full">
 
@@ -1599,9 +1619,7 @@ button{
 
         <div class="modal-header">
 
-            <h2>
-                UPI Payment
-            </h2>
+            <h2 id="paymentModalTitle">Payment</h2>
 
             <button
                 class="close-btn"
@@ -2778,8 +2796,13 @@ async function placeOrder(){
             status:
                 "received",
 
+            paymentMethod:
+                document.getElementById("paymentMethod").value,
+
             paymentStatus:
-                "unpaid",
+                document.getElementById("paymentMethod").value === "cash"
+                ? "cash_pending"
+                : "unpaid",
 
             createdAt:
                 firebase.firestore
@@ -2802,7 +2825,10 @@ async function placeOrder(){
         closeModal("checkoutModal");
 
 
-        openPayment(total);
+        openPayment(
+            total,
+            document.getElementById("paymentMethod").value
+        );
 
 
         console.log(
@@ -2832,72 +2858,78 @@ async function placeOrder(){
    PAYMENT
 ========================================================= */
 
-function openPayment(amount){
+function openPayment(amount, paymentMethod = "upi"){
 
-    document.getElementById(
-        "paymentAmount"
-    ).textContent =
+    document.getElementById("paymentAmount").textContent =
         "₹" + amount;
 
-
-    const upiLink =
-        "upi://pay?" +
-        "pa=" +
-        encodeURIComponent(UPI_ID) +
-        "&pn=" +
-        encodeURIComponent(CAFE_NAME) +
-        "&am=" +
-        encodeURIComponent(amount) +
-        "&cu=INR";
-
-
-    const qrContainer =
-        document.getElementById("upiQR");
-
-
-    qrContainer.innerHTML = "";
-
-
-    new QRCode(
-        qrContainer,
-        {
-
-            text:upiLink,
-
-            width:200,
-
-            height:200,
-
-            correctLevel:
-                QRCode.CorrectLevel.H
-
-        }
+    const title = document.getElementById("paymentModalTitle");
+    const upiInfo = document.querySelector(".upi-id");
+    const upiQR = document.getElementById("upiQR");
+    const upiButton = document.getElementById("payWithUPIBtn");
+    const instruction = document.querySelector(
+        '#paymentModal .payment-box > p:first-child'
     );
 
+    if(paymentMethod === "cash"){
 
-    window.currentUPILink =
-        upiLink;
+        if(title) title.textContent = "Cash Payment";
+        if(upiInfo) upiInfo.classList.add("hidden");
+        if(upiQR) upiQR.classList.add("hidden");
+        if(upiButton) upiButton.classList.add("hidden");
 
+        if(instruction){
+            instruction.textContent =
+                "Cash payment selected. Please pay the café staff.";
+        }
 
-    document
-        .getElementById("payWithUPIBtn")
-        .classList.remove("hidden");
+        document.getElementById("markPaidBtn").classList.add("hidden");
 
+        const waiting = document.getElementById("paymentWaitingMessage");
+        waiting.classList.remove("hidden");
+        waiting.innerHTML =
+            "Cash payment selected.<br>" +
+            "Please pay the café staff. Admin will verify the cash payment.";
 
-    document
-        .getElementById("markPaidBtn")
-        .classList.remove("hidden");
+    }else{
 
+        if(title) title.textContent = "UPI Payment";
+        if(upiInfo) upiInfo.classList.remove("hidden");
+        if(upiQR) upiQR.classList.remove("hidden");
+        if(upiButton) upiButton.classList.remove("hidden");
 
-    document
-        .getElementById("paymentWaitingMessage")
-        .classList.add("hidden");
+        if(instruction){
+            instruction.textContent =
+                "Pay the exact amount using UPI";
+        }
 
+        const upiLink =
+            "upi://pay?" +
+            "pa=" + encodeURIComponent(UPI_ID) +
+            "&pn=" + encodeURIComponent(CAFE_NAME) +
+            "&am=" + encodeURIComponent(amount) +
+            "&cu=INR";
+
+        upiQR.innerHTML = "";
+
+        new QRCode(
+            upiQR,
+            {
+                text:upiLink,
+                width:200,
+                height:200,
+                correctLevel:QRCode.CorrectLevel.H
+            }
+        );
+
+        window.currentUPILink = upiLink;
+
+        document.getElementById("markPaidBtn").classList.remove("hidden");
+        document.getElementById("paymentWaitingMessage").classList.add("hidden");
+    }
 
     openModal("paymentModal");
-
 }
-
 
 function openUPI(){
 
@@ -2987,6 +3019,12 @@ async function markPaymentDone(){
 
             paymentStatus:
                 "customer_marked_paid",
+
+            status:
+                "received",
+
+            paymentMethod:
+                "upi",
 
             paymentSubmittedAt:
                 firebase.firestore
@@ -3611,6 +3649,17 @@ function getPaymentStatusHTML(paymentStatus){
     }
 
 
+    if(status === "cash_pending"){
+
+        return `
+            <span class="payment-badge payment-cash">
+                CASH PENDING
+            </span>
+        `;
+
+    }
+
+
     return `
         <span class="payment-badge payment-unpaid">
             UNPAID
@@ -3630,22 +3679,16 @@ function getPaymentActions(order){
         order.paymentStatus || "unpaid";
 
 
-    /*
-       CUSTOMER CLAIMED PAYMENT
-       Admin can verify or reject.
-    */
-
     if(paymentStatus === "customer_marked_paid"){
 
         return `
-
             <div class="payment-actions">
 
                 <button
                     class="verify-payment-btn"
                     onclick="verifyPayment('${order.id}','paid')"
                 >
-                    ✓ Verify Payment
+                    ✓ Verify UPI Payment
                 </button>
 
                 <button
@@ -3656,51 +3699,51 @@ function getPaymentActions(order){
                 </button>
 
             </div>
-
         `;
 
     }
 
 
-    /*
-       VERIFIED PAID
-       Admin can remove the order.
-    */
+    if(paymentStatus === "cash_pending"){
+
+        return `
+            <div class="payment-actions">
+
+                <button
+                    class="verify-payment-btn"
+                    onclick="verifyPayment('${order.id}','paid')"
+                >
+                    ✓ Cash Received
+                </button>
+
+            </div>
+        `;
+
+    }
+
 
     if(paymentStatus === "paid"){
 
         return `
-
             <div class="payment-actions">
 
                 <div class="paid-confirmation">
                     ✓ Payment Verified
                 </div>
 
-                <button
-                    class="remove-order-btn"
-                    onclick="removeOrder('${order.id}')"
-                >
-                    🗑 Remove Order
-                </button>
+                <span style="color:#777;font-size:10px;">
+                    Set status to Completed to remove
+                </span>
 
             </div>
-
         `;
 
     }
 
 
-    /*
-       REJECTED
-       Admin can remove the rejected order
-       or wait for customer to pay again.
-    */
-
     if(paymentStatus === "payment_rejected"){
 
         return `
-
             <div class="payment-actions">
 
                 <div style="
@@ -3711,29 +3754,19 @@ function getPaymentActions(order){
                     Payment Rejected
                 </div>
 
-                <button
-                    class="remove-order-btn"
-                    onclick="removeOrder('${order.id}')"
-                >
-                    🗑 Remove Order
-                </button>
-
             </div>
-
         `;
 
     }
 
 
     return `
-
         <span style="
             color:#777;
             font-size:11px;
         ">
             Waiting for payment
         </span>
-
     `;
 
 }
@@ -4238,6 +4271,7 @@ function getStatusOptions(current){
 
     const statuses = [
 
+        "pending_payment",
         "received",
         "preparing",
         "ready",
@@ -4293,13 +4327,74 @@ async function updateOrderStatus(
 
     try{
 
-        await db
-        .collection("orders")
-        .doc(orderId)
-        .update({
+        const orderRef =
+            db.collection("orders").doc(orderId);
 
+
+        const orderDoc =
+            await orderRef.get();
+
+
+        if(!orderDoc.exists){
+
+            showToast(
+                "Order no longer exists."
+            );
+
+            return;
+
+        }
+
+
+        const order =
+            orderDoc.data();
+
+
+        /*
+           Payment must be verified before the order
+           can be completed and removed from Entries.
+        */
+        if(status === "completed"){
+
+            if(order.paymentStatus !== "paid"){
+
+                showToast(
+                    "Verify payment first. Then mark the order Completed."
+                );
+
+                return;
+
+            }
+
+
+            const confirmed =
+                confirm(
+                    "Payment is verified. Mark this order Completed and remove it from Entries?"
+                );
+
+
+            if(!confirmed){
+
+                return;
+
+            }
+
+
+            await orderRef.delete();
+
+
+            showToast(
+                "Order completed and removed from Entries. ✓"
+            );
+
+
+            return;
+
+        }
+
+
+        await orderRef.update({
             status:status
-
         });
 
 
