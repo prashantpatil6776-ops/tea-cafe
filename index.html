@@ -931,6 +931,17 @@ button{
     transform:translate(-50%,0);
 }
 
+/* ================= ORDER NOTIFICATION ================= */
+.order-notification{position:fixed;top:92px;right:25px;z-index:6000;width:min(360px,calc(100% - 30px));display:flex;align-items:center;gap:14px;padding:16px 18px;background:#151515;border:1px solid var(--gold);border-radius:16px;box-shadow:0 18px 45px rgba(0,0,0,.55);transform:translateX(calc(100% + 40px));opacity:0;pointer-events:none;transition:.35s ease;}
+.order-notification.show{transform:translateX(0);opacity:1;pointer-events:auto;}
+.order-notification-icon{width:42px;height:42px;flex:0 0 42px;display:flex;align-items:center;justify-content:center;border-radius:50%;background:var(--gold);color:#080808;font-size:20px;}
+.order-notification-content{flex:1;}
+.order-notification-content strong{display:block;color:var(--gold-light);margin-bottom:3px;}
+.order-notification-content span{color:#ddd;font-size:12px;}
+.order-notification-close{border:0;background:transparent;color:#aaa;font-size:20px;padding:4px;}
+.order-notification-close:hover{color:#fff;}
+@media(max-width:650px){.order-notification{top:82px;right:15px;width:calc(100% - 30px);}}
+
 /* ================= EMPTY ================= */
 
 .empty{
@@ -1273,12 +1284,10 @@ button{
 
                 </div>
 
-                <button
-                    class="logout-btn"
-                    onclick="adminLogout()"
-                >
-                    Logout
-                </button>
+                <div style="display:flex;align-items:center;gap:10px;">
+                    <button class="header-btn" id="enableSoundBtn" onclick="enableOrderNotifications()" title="Enable order notification sound">🔔 Sound ON</button>
+                    <button class="logout-btn" onclick="adminLogout()">Logout</button>
+                </div>
 
             </div>
 
@@ -1710,6 +1719,16 @@ button{
 </div>
 
 
+<!-- ================= NEW ORDER NOTIFICATION ================= -->
+<div id="orderNotification" class="order-notification" role="alert" aria-live="assertive">
+    <div class="order-notification-icon">🔔</div>
+    <div class="order-notification-content">
+        <strong>New Order Received!</strong>
+        <span id="orderNotificationText">A new customer order has arrived.</span>
+    </div>
+    <button class="order-notification-close" onclick="hideOrderNotification()" aria-label="Close notification">×</button>
+</div>
+
 <!-- ================= TOAST ================= -->
 
 <div
@@ -1919,6 +1938,9 @@ let selectedCategory = "All";
 let currentOrderId = null;
 
 let ordersListener = null;
+let ordersInitialSnapshotLoaded = false;
+let orderNotificationTimer = null;
+let orderAudioContext = null;
 
 window.isCurrentUserAdmin = false;
 
@@ -3222,6 +3244,8 @@ async function checkAdminAccess(user){
 
 async function adminLogin(){
 
+    initOrderNotificationAudio();
+
     if(!firebaseReady){
 
         showToast(
@@ -3495,6 +3519,9 @@ async function adminLogout(){
 
         }
 
+        ordersInitialSnapshotLoaded = false;
+        hideOrderNotification();
+
 
         document.getElementById(
             "loginBox"
@@ -3527,6 +3554,71 @@ async function adminLogout(){
 
 
 /* =========================================================
+   ORDER NOTIFICATIONS
+========================================================= */
+
+function initOrderNotificationAudio(){
+    try{
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        if(!AudioContext) return;
+        if(!orderAudioContext) orderAudioContext = new AudioContext();
+        if(orderAudioContext.state === "suspended") orderAudioContext.resume().catch(function(error){ console.warn("Notification audio resume blocked:",error); });
+    }catch(error){ console.warn("Notification audio unavailable:",error); }
+}
+
+function playNewOrderSound(){
+    try{
+        initOrderNotificationAudio();
+        if(!orderAudioContext || orderAudioContext.state !== "running") return;
+        const now = orderAudioContext.currentTime;
+        [0,0.18,0.36].forEach(function(offset,index){
+            const oscillator = orderAudioContext.createOscillator();
+            const gain = orderAudioContext.createGain();
+            oscillator.type = "sine";
+            oscillator.frequency.setValueAtTime(index === 2 ? 880 : 660,now + offset);
+            gain.gain.setValueAtTime(0.0001,now + offset);
+            gain.gain.exponentialRampToValueAtTime(0.22,now + offset + 0.02);
+            gain.gain.exponentialRampToValueAtTime(0.0001,now + offset + 0.14);
+            oscillator.connect(gain); gain.connect(orderAudioContext.destination);
+            oscillator.start(now + offset); oscillator.stop(now + offset + 0.16);
+        });
+    }catch(error){ console.warn("Could not play new-order sound:",error); }
+}
+
+function showOrderNotification(order){
+    const notification=document.getElementById("orderNotification");
+    const text=document.getElementById("orderNotificationText");
+    if(!notification) return;
+    const orderNumber=order && order.id ? order.id.slice(0,7) : "NEW";
+    const table=order && order.table ? "Table " + order.table : "New customer";
+    const total=order && order.total != null ? " • ₹" + Number(order.total) : "";
+    if(text) text.textContent="Order #"+orderNumber+" • "+table+total;
+    notification.classList.add("show");
+    clearTimeout(orderNotificationTimer);
+    orderNotificationTimer=setTimeout(hideOrderNotification,7000);
+    playNewOrderSound();
+    if("Notification" in window && Notification.permission === "granted"){
+        try{ new Notification("NOIRÉ Café — New Order",{body:"Order #"+orderNumber+" • "+table+total,tag:"noire-new-order-"+orderNumber}); }catch(error){ console.warn("Browser notification error:",error); }
+    }
+}
+
+function hideOrderNotification(){
+    const notification=document.getElementById("orderNotification");
+    if(notification) notification.classList.remove("show");
+}
+
+function enableOrderNotifications(){
+    initOrderNotificationAudio();
+    const button=document.getElementById("enableSoundBtn");
+    if(button) button.textContent="🔔 Sound ON";
+    if("Notification" in window && Notification.permission === "default"){
+        Notification.requestPermission().then(function(permission){
+            showToast(permission === "granted" ? "Order notifications enabled. 🔔" : "Sound enabled. Browser notifications are blocked.");
+        }).catch(function(){ showToast("Sound enabled."); });
+    }else{ showToast("Order notification sound enabled. 🔔"); }
+}
+
+/* =========================================================
    LOAD ORDERS
 ========================================================= */
 
@@ -3556,6 +3648,9 @@ function loadOrders(){
 
     }
 
+    ordersInitialSnapshotLoaded = false;
+    initOrderNotificationAudio();
+
 
     ordersListener =
         db
@@ -3584,6 +3679,18 @@ function loadOrders(){
                     }
                 );
 
+
+                if(ordersInitialSnapshotLoaded){
+                    const addedChanges = snapshot.docChanges().filter(function(change){
+                        return change.type === "added";
+                    });
+                    if(addedChanges.length){
+                        const newest = addedChanges[0];
+                        showOrderNotification({id:newest.doc.id,...newest.doc.data()});
+                    }
+                }else{
+                    ordersInitialSnapshotLoaded = true;
+                }
 
                 renderOrders(orders);
 
