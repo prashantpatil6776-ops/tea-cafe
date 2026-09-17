@@ -1726,7 +1726,7 @@ button{
         <strong>New Order Received!</strong>
         <span id="orderNotificationText">A new customer order has arrived.</span>
     </div>
-    <button class="order-notification-close" onclick="hideOrderNotification()" aria-label="Close notification">×</button>
+    <button class="order-notification-close" onclick="viewNotifiedOrder()" aria-label="View order">View Order</button>
 </div>
 
 <!-- ================= TOAST ================= -->
@@ -1939,7 +1939,7 @@ let currentOrderId = null;
 
 let ordersListener = null;
 let ordersInitialSnapshotLoaded = false;
-let orderNotificationTimer = null;
+let pendingNotificationOrderId = null;
 let orderAudioContext = null;
 
 window.isCurrentUserAdmin = false;
@@ -3589,22 +3589,45 @@ function showOrderNotification(order){
     const notification=document.getElementById("orderNotification");
     const text=document.getElementById("orderNotificationText");
     if(!notification) return;
+
+    pendingNotificationOrderId = order && order.id ? order.id : null;
+
     const orderNumber=order && order.id ? order.id.slice(0,7) : "NEW";
     const table=order && order.table ? "Table " + order.table : "New customer";
     const total=order && order.total != null ? " • ₹" + Number(order.total) : "";
     if(text) text.textContent="Order #"+orderNumber+" • "+table+total;
+
+    // IMPORTANT: notification stays visible until admin views this order.
     notification.classList.add("show");
-    clearTimeout(orderNotificationTimer);
-    orderNotificationTimer=setTimeout(hideOrderNotification,7000);
     playNewOrderSound();
+
     if("Notification" in window && Notification.permission === "granted"){
         try{ new Notification("NOIRÉ Café — New Order",{body:"Order #"+orderNumber+" • "+table+total,tag:"noire-new-order-"+orderNumber}); }catch(error){ console.warn("Browser notification error:",error); }
     }
 }
 
+function viewNotifiedOrder(){
+    const orderId = pendingNotificationOrderId;
+    if(!orderId) {
+        hideOrderNotification();
+        return;
+    }
+
+    const row = document.querySelector('tr[data-order-id="' + orderId.replace(/"/g,'\\"') + '"]');
+    if(row){
+        row.scrollIntoView({behavior:"smooth",block:"center"});
+        row.classList.add("new-order-highlight");
+        setTimeout(function(){ row.classList.remove("new-order-highlight"); },3000);
+    }
+
+    // Admin has opened/viewed the notified order.
+    hideOrderNotification();
+}
+
 function hideOrderNotification(){
     const notification=document.getElementById("orderNotification");
     if(notification) notification.classList.remove("show");
+    pendingNotificationOrderId = null;
 }
 
 function enableOrderNotifications(){
@@ -4107,6 +4130,13 @@ async function removeOrder(orderId){
 }
 
 
+function hideOrderNotificationIfViewed(orderId){
+    if(pendingNotificationOrderId === orderId){
+        hideOrderNotification();
+    }
+}
+
+
 /* =========================================================
    RENDER ORDERS
 ========================================================= */
@@ -4267,7 +4297,7 @@ function renderOrders(orders){
 
             return `
 
-                <tr>
+                <tr data-order-id="${escapeHTML(order.id)}" onclick="if(event.target.tagName !== 'BUTTON' && event.target.tagName !== 'SELECT' && !event.target.closest('button,select')) hideOrderNotificationIfViewed('${escapeHTML(order.id)}')">
 
                     <td>
 
