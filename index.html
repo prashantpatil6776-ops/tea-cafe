@@ -2843,6 +2843,12 @@ async function placeOrder(){
         currentOrderId =
             docRef.id;
 
+        // Order is successfully created, so clear the customer cart
+        // immediately for BOTH UPI and Cash payment methods.
+        cart = [];
+        saveCart();
+        updateCart();
+
 
         closeModal("checkoutModal");
 
@@ -3569,7 +3575,16 @@ function initOrderNotificationAudio(){
 function playNewOrderSound(){
     try{
         initOrderNotificationAudio();
-        if(!orderAudioContext || orderAudioContext.state !== "running") return;
+        if(!orderAudioContext) return;
+
+        // Try to resume again at the exact moment the new order arrives.
+        if(orderAudioContext.state === "suspended") {
+            orderAudioContext.resume().catch(function(error){
+                console.warn("Notification audio resume blocked:",error);
+            });
+        }
+        if(orderAudioContext.state !== "running") return;
+
         const now = orderAudioContext.currentTime;
         [0,0.18,0.36].forEach(function(offset,index){
             const oscillator = orderAudioContext.createOscillator();
@@ -3707,10 +3722,9 @@ function loadOrders(){
                     const addedChanges = snapshot.docChanges().filter(function(change){
                         return change.type === "added";
                     });
-                    if(addedChanges.length){
-                        const newest = addedChanges[0];
-                        showOrderNotification({id:newest.doc.id,...newest.doc.data()});
-                    }
+                    addedChanges.forEach(function(change){
+                        showOrderNotification({id:change.doc.id,...change.doc.data()});
+                    });
                 }else{
                     ordersInitialSnapshotLoaded = true;
                 }
