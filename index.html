@@ -15,6 +15,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-messaging-compat.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
 <style>
@@ -1783,6 +1784,12 @@ try{
     window.auth = firebase.auth();
     window.db = firebase.firestore();
 
+    // Firebase Cloud Messaging for background notifications.
+    // The VAPID key must be copied from Firebase Console > Project Settings > Cloud Messaging.
+    if ("Notification" in window && "serviceWorker" in navigator && firebase.messaging.isSupported()) {
+        firebaseMessaging = firebase.messaging();
+    }
+
     firebaseReady = true;
 
     console.log("✅ Firebase connected successfully");
@@ -1941,6 +1948,8 @@ let ordersListener = null;
 let ordersInitialSnapshotLoaded = false;
 let pendingNotificationOrderId = null;
 let orderAudioContext = null;
+let firebaseMessaging = null;
+const FCM_VAPID_KEY = "BBtn0OgssWXrer4KqZN4nCqIdSc3k5pJ2G1oN-xS-hxO6QgdQ9sjPc61ZVjNwHCVMVgMzSzwE-Kf0_2grw13aVs";
 
 window.isCurrentUserAdmin = false;
 
@@ -3192,6 +3201,11 @@ async function checkAdminAccess(user){
                 "✅ ADMIN VERIFIED"
             );
 
+            // Register this admin browser for background push notifications.
+            // Permission may still need the user's click on the Sound/Notifications button.
+            if ("Notification" in window && Notification.permission === "granted") {
+                setTimeout(registerFirebaseMessaging, 0);
+            }
 
             return true;
 
@@ -3560,6 +3574,80 @@ async function adminLogout(){
 
 
 /* =========================================================
+   BACKGROUND PUSH NOTIFICATIONS (FCM)
+========================================================= */
+
+async function registerFirebaseMessaging() {
+    try {
+        if (!firebaseReady || !firebaseMessaging || !auth.currentUser || !window.isCurrentUserAdmin) {
+            return;
+        }
+
+        if (FCM_VAPID_KEY === "YOUR_FIREBASE_WEB_PUSH_VAPID_KEY") {
+            console.warn("FCM VAPID key is not configured yet.");
+            showToast("Add Firebase Web Push VAPID key first.");
+            return;
+        }
+
+        const permission = await Notification.requestPermission();
+        if (permission !== "granted") {
+            showToast("Browser notification permission was blocked.");
+            return;
+        }
+
+        const registration = await navigator.serviceWorker.register("./firebase-messaging-sw.js");
+        await navigator.serviceWorker.ready;
+
+        const token = await firebaseMessaging.getToken({
+            vapidKey: FCM_VAPID_KEY,
+            serviceWorkerRegistration: registration
+        });
+
+        if (!token) {
+            showToast("Could not create notification token.");
+            return;
+        }
+
+        const uid = auth.currentUser.uid;
+        await db.collection("fcmTokens").doc(uid).set({
+            token: token,
+            uid: uid,
+            role: "admin",
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true });
+
+        firebaseMessaging.onMessage(function(payload) {
+            console.log("Foreground FCM message:", payload);
+
+            const notification = payload.notification || {};
+            const data = payload.data || {};
+            const title = notification.title || data.title || "NOIRÉ Café — New Order";
+            const body = notification.body || data.body || "A new order has arrived.";
+
+            // The existing UI/audio notification is still used while the site is open.
+            if (data.orderId) {
+                showOrderNotification({
+                    id: data.orderId,
+                    table: data.table || "New customer",
+                    total: data.total || 0
+                });
+            } else if ("Notification" in window && Notification.permission === "granted") {
+                new Notification(title, { body: body, tag: "noire-fcm-foreground" });
+            }
+        });
+
+
+        const button = document.getElementById("enableSoundBtn");
+        if (button) button.textContent = "🔔 Notifications ON";
+        showToast("Background order notifications enabled. 🔔");
+
+    } catch (error) {
+        console.error("FCM registration error:", error);
+        showToast("Background notification setup failed. Check Firebase settings.");
+    }
+}
+
+/* =========================================================
    ORDER NOTIFICATIONS
 ========================================================= */
 
@@ -3648,12 +3736,23 @@ function hideOrderNotification(){
 function enableOrderNotifications(){
     initOrderNotificationAudio();
     const button=document.getElementById("enableSoundBtn");
-    if(button) button.textContent="🔔 Sound ON";
-    if("Notification" in window && Notification.permission === "default"){
+    if(button) button.textContent="🔔 Setting up...";
+
+    if ("Notification" in window && Notification.permission !== "granted") {
         Notification.requestPermission().then(function(permission){
-            showToast(permission === "granted" ? "Order notifications enabled. 🔔" : "Sound enabled. Browser notifications are blocked.");
-        }).catch(function(){ showToast("Sound enabled."); });
-    }else{ showToast("Order notification sound enabled. 🔔"); }
+            if(permission === "granted") {
+                registerFirebaseMessaging();
+            } else {
+                if(button) button.textContent="🔔 Notifications BLOCKED";
+                showToast("Browser notifications are blocked.");
+            }
+        }).catch(function(error){
+            console.error("Notification permission error:", error);
+            showToast("Could not enable notifications.");
+        });
+    } else {
+        registerFirebaseMessaging();
+    }
 }
 
 /* =========================================================
