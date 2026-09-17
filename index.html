@@ -858,6 +858,196 @@ button{
     font-weight:700;
 }
 
+
+/* ================= MENU MANAGEMENT ================= */
+
+.menu-management{
+    margin-top:30px;
+    background:#111;
+    border:1px solid rgba(255,255,255,.07);
+    border-radius:20px;
+    padding:24px;
+}
+
+.menu-management-header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:15px;
+    margin-bottom:20px;
+}
+
+.menu-management-header h2{
+    font-family:"Playfair Display",serif;
+    font-size:30px;
+}
+
+.menu-management-header p{
+    color:var(--muted);
+    font-size:13px;
+    margin-top:4px;
+}
+
+.menu-add-btn{
+    width:auto;
+    padding:12px 18px;
+    margin:0;
+    white-space:nowrap;
+}
+
+.menu-filters{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    margin-bottom:18px;
+}
+
+.menu-filter-btn{
+    padding:9px 15px;
+    border-radius:999px;
+    background:#181818;
+    color:#aaa;
+    border:1px solid rgba(255,255,255,.08);
+}
+
+.menu-filter-btn.active,
+.menu-filter-btn:hover{
+    background:var(--gold);
+    color:#080808;
+    border-color:var(--gold);
+}
+
+.admin-menu-list{
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:12px;
+}
+
+.admin-menu-card{
+    display:flex;
+    align-items:center;
+    gap:14px;
+    padding:15px;
+    background:#181818;
+    border:1px solid rgba(255,255,255,.06);
+    border-radius:15px;
+}
+
+.admin-menu-icon{
+    width:58px;
+    height:58px;
+    flex:0 0 58px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    border-radius:14px;
+    background:rgba(212,175,99,.08);
+    font-size:30px;
+}
+
+.admin-menu-info{
+    flex:1;
+    min-width:0;
+}
+
+.admin-menu-info h3{
+    font-size:16px;
+    margin-bottom:4px;
+}
+
+.admin-menu-info p{
+    color:#888;
+    font-size:12px;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+}
+
+.admin-menu-meta{
+    color:var(--gold-light);
+    font-size:13px;
+    margin-top:5px;
+}
+
+.admin-menu-actions{
+    display:flex;
+    gap:7px;
+    flex-wrap:wrap;
+}
+
+.menu-edit-btn,
+.menu-delete-btn{
+    padding:8px 11px;
+    border-radius:8px;
+    font-size:11px;
+    font-weight:700;
+}
+
+.menu-edit-btn{
+    border:1px solid rgba(212,175,99,.35);
+    background:rgba(212,175,99,.08);
+    color:var(--gold-light);
+}
+
+.menu-delete-btn{
+    border:1px solid rgba(239,106,106,.35);
+    background:rgba(239,106,106,.07);
+    color:#ef8c8c;
+}
+
+.menu-edit-btn:hover{
+    background:var(--gold);
+    color:#080808;
+}
+
+.menu-delete-btn:hover{
+    background:var(--danger);
+    color:#fff;
+}
+
+.menu-empty{
+    padding:35px 15px;
+    text-align:center;
+    color:#777;
+    border:1px dashed rgba(255,255,255,.08);
+    border-radius:14px;
+}
+
+@media(max-width:800px){
+    .admin-menu-list{
+        grid-template-columns:1fr;
+    }
+}
+
+@media(max-width:650px){
+    .menu-management{
+        padding:18px;
+    }
+
+    .menu-management-header{
+        align-items:flex-start;
+        flex-direction:column;
+    }
+
+    .menu-add-btn{
+        width:100%;
+    }
+
+    .admin-menu-card{
+        align-items:flex-start;
+        flex-wrap:wrap;
+    }
+
+    .admin-menu-info{
+        width:calc(100% - 80px);
+    }
+
+    .admin-menu-actions{
+        width:100%;
+        margin-left:72px;
+    }
+}
+
 /* ================= QR ================= */
 
 .qr-container{
@@ -1346,6 +1536,29 @@ button{
             </div>
 
 
+            <!-- ================= MENU MANAGEMENT ================= -->
+
+            <div class="menu-management">
+
+                <div class="menu-management-header">
+                    <div>
+                        <div class="hero-label">Menu Control</div>
+                        <h2>Manage Menu</h2>
+                        <p>Add, edit or delete items. Changes are saved to Firebase and appear on the customer menu.</p>
+                    </div>
+
+                    <button class="primary-btn menu-add-btn" onclick="openMenuItemForm()">
+                        + Add Menu Item
+                    </button>
+                </div>
+
+                <div id="adminMenuFilters" class="menu-filters"></div>
+
+                <div id="adminMenuList" class="admin-menu-list"></div>
+
+            </div>
+
+
             <!-- MOBILE HORIZONTAL SCROLL -->
 
             <div class="orders-wrap">
@@ -1450,6 +1663,65 @@ button{
     </div>
 
 </section>
+
+
+<!-- ================= MENU ITEM MODAL ================= -->
+
+<div id="menuItemModal" class="modal-overlay">
+
+    <div class="modal">
+
+        <div class="modal-header">
+
+            <h2 id="menuItemModalTitle">Add Menu Item</h2>
+
+            <button class="close-btn" onclick="closeModal('menuItemModal')">
+                ×
+            </button>
+
+        </div>
+
+        <div class="form-grid">
+
+            <div class="form-group">
+                <label>Item Name</label>
+                <input id="menuItemName" type="text" placeholder="Example: Masala Chai">
+            </div>
+
+            <div class="form-group">
+                <label>Price (₹)</label>
+                <input id="menuItemPrice" type="number" min="0" step="1" placeholder="120">
+            </div>
+
+            <div class="form-group">
+                <label>Category</label>
+                <input id="menuItemCategory" type="text" list="menuCategoryList" placeholder="Example: Drinks">
+                <datalist id="menuCategoryList"></datalist>
+            </div>
+
+            <div class="form-group">
+                <label>Icon / Emoji</label>
+                <input id="menuItemIcon" type="text" maxlength="4" placeholder="☕">
+            </div>
+
+            <div class="form-group full">
+                <label>Description</label>
+                <textarea id="menuItemDescription" placeholder="Short description of the item"></textarea>
+            </div>
+
+        </div>
+
+        <button id="saveMenuItemBtn" class="primary-btn" onclick="saveMenuItem()">
+            Save Menu Item
+        </button>
+
+        <button class="secondary-btn" onclick="closeModal('menuItemModal')">
+            Cancel
+        </button>
+
+    </div>
+
+</div>
 
 
 <!-- ================= CART MODAL ================= -->
@@ -1821,8 +2093,7 @@ const CAFE_NAME =
    MENU DATA
 ========================================================= */
 
-const menuItems = [
-
+const defaultMenuItems = [
     {
         id:"coffee-1",
         name:"Classic Cappuccino",
@@ -1831,7 +2102,6 @@ const menuItems = [
         icon:"☕",
         description:"Rich espresso with smooth steamed milk and foam."
     },
-
     {
         id:"coffee-2",
         name:"Cold Coffee",
@@ -1840,7 +2110,6 @@ const menuItems = [
         icon:"🧋",
         description:"Creamy chilled coffee, perfect for a refreshing break."
     },
-
     {
         id:"coffee-3",
         name:"Caramel Latte",
@@ -1849,7 +2118,6 @@ const menuItems = [
         icon:"☕",
         description:"Smooth espresso blended with creamy caramel."
     },
-
     {
         id:"pizza-1",
         name:"Margherita Pizza",
@@ -1858,7 +2126,6 @@ const menuItems = [
         icon:"🍕",
         description:"Classic tomato, mozzarella and herbs."
     },
-
     {
         id:"pizza-2",
         name:"Farmhouse Pizza",
@@ -1867,7 +2134,6 @@ const menuItems = [
         icon:"🍕",
         description:"Loaded with fresh vegetables and mozzarella."
     },
-
     {
         id:"burger-1",
         name:"Classic Burger",
@@ -1876,7 +2142,6 @@ const menuItems = [
         icon:"🍔",
         description:"Juicy patty, lettuce, tomato and signature sauce."
     },
-
     {
         id:"burger-2",
         name:"Cheese Burger",
@@ -1885,7 +2150,6 @@ const menuItems = [
         icon:"🍔",
         description:"Classic burger topped with melted cheese."
     },
-
     {
         id:"snacks-1",
         name:"French Fries",
@@ -1894,7 +2158,6 @@ const menuItems = [
         icon:"🍟",
         description:"Crispy golden fries with seasoning."
     },
-
     {
         id:"snacks-2",
         name:"Cheese Garlic Bread",
@@ -1903,7 +2166,6 @@ const menuItems = [
         icon:"🥖",
         description:"Toasted garlic bread loaded with cheese."
     },
-
     {
         id:"dessert-1",
         name:"Chocolate Brownie",
@@ -1912,7 +2174,6 @@ const menuItems = [
         icon:"🍫",
         description:"Warm, rich and fudgy chocolate brownie."
     },
-
     {
         id:"dessert-2",
         name:"Cheesecake",
@@ -1921,7 +2182,6 @@ const menuItems = [
         icon:"🍰",
         description:"Creamy classic cheesecake with a buttery base."
     },
-
     {
         id:"drink-1",
         name:"Fresh Lemonade",
@@ -1930,8 +2190,9 @@ const menuItems = [
         icon:"🍋",
         description:"Freshly squeezed lemon with a refreshing twist."
     }
-
 ];
+
+let menuItems = [];
 
 
 /* =========================================================
@@ -2074,6 +2335,369 @@ function openAdminLogin(){
 
     window.scrollTo(0,0);
 
+}
+
+
+/* =========================================================
+   MENU MANAGEMENT
+========================================================= */
+
+let editingMenuItemId = null;
+let selectedAdminMenuCategory = "All";
+
+async function loadMenuItems(){
+    if(!firebaseReady){
+        menuItems = defaultMenuItems.map(item => ({...item}));
+        await loadMenuItems();
+        return;
+    }
+
+    try{
+        const snapshot = await db.collection("menu").get();
+
+        if(snapshot.empty){
+            const batch = db.batch();
+
+            defaultMenuItems.forEach(function(item){
+                const ref = db.collection("menu").doc(item.id);
+                batch.set(ref, {
+                    name:item.name,
+                    category:item.category,
+                    price:Number(item.price),
+                    icon:item.icon,
+                    description:item.description,
+                    createdAt:firebase.firestore.FieldValue.serverTimestamp(),
+                    updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+                });
+            });
+
+            await batch.commit();
+
+            menuItems = defaultMenuItems.map(item => ({...item}));
+        }else{
+            menuItems = [];
+
+            snapshot.forEach(function(doc){
+                const data = doc.data();
+
+                menuItems.push({
+                    id:doc.id,
+                    name:data.name || "Unnamed Item",
+                    category:data.category || "Other",
+                    price:Number(data.price || 0),
+                    icon:data.icon || "🍽️",
+                    description:data.description || ""
+                });
+            });
+
+            menuItems.sort(function(a,b){
+                return String(a.category).localeCompare(String(b.category)) ||
+                       String(a.name).localeCompare(String(b.name));
+            });
+        }
+
+        renderCategories();
+        renderMenu();
+        updateCart();
+
+        if(window.isCurrentUserAdmin){
+            renderAdminMenu();
+        }
+
+    }catch(error){
+        console.error("Menu load error:",error);
+
+        menuItems = defaultMenuItems.map(item => ({...item}));
+        renderCategories();
+        renderMenu();
+        updateCart();
+
+        showToast("Could not load saved menu. Using default menu.");
+    }
+}
+
+function getMenuCategories(){
+    return [
+        ...new Set(
+            menuItems
+                .map(item => String(item.category || "").trim())
+                .filter(Boolean)
+        )
+    ].sort(function(a,b){
+        return a.localeCompare(b);
+    });
+}
+
+function renderAdminMenuFilters(){
+    const container = document.getElementById("adminMenuFilters");
+
+    if(!container){
+        return;
+    }
+
+    const categories = ["All", ...getMenuCategories()];
+
+    if(!categories.includes(selectedAdminMenuCategory)){
+        selectedAdminMenuCategory = "All";
+    }
+
+    container.innerHTML = categories.map(function(category){
+        return `
+            <button
+                class="menu-filter-btn ${selectedAdminMenuCategory === category ? "active" : ""}"
+                onclick="filterAdminMenu('${escapeHTML(category).replace(/'/g,"&#039;")}')"
+            >
+                ${escapeHTML(category)}
+            </button>
+        `;
+    }).join("");
+}
+
+function filterAdminMenu(category){
+    selectedAdminMenuCategory = category;
+    renderAdminMenu();
+}
+
+function renderAdminMenu(){
+    const container = document.getElementById("adminMenuList");
+
+    if(!container){
+        return;
+    }
+
+    renderAdminMenuFilters();
+
+    const items =
+        selectedAdminMenuCategory === "All"
+        ? menuItems
+        : menuItems.filter(function(item){
+            return item.category === selectedAdminMenuCategory;
+        });
+
+    if(!items.length){
+        container.innerHTML = `
+            <div class="menu-empty">
+                No menu items in this category.
+            </div>
+        `;
+        return;
+    }
+
+    container.innerHTML = items.map(function(item){
+        return `
+            <div class="admin-menu-card">
+
+                <div class="admin-menu-icon">
+                    ${escapeHTML(item.icon || "🍽️")}
+                </div>
+
+                <div class="admin-menu-info">
+                    <h3>${escapeHTML(item.name)}</h3>
+                    <p>${escapeHTML(item.description || "No description")}</p>
+                    <div class="admin-menu-meta">
+                        ${escapeHTML(item.category)} • ₹${Number(item.price || 0)}
+                    </div>
+                </div>
+
+                <div class="admin-menu-actions">
+                    <button
+                        class="menu-edit-btn"
+                        onclick="openMenuItemForm('${escapeHTML(item.id)}')"
+                    >
+                        ✎ Edit
+                    </button>
+
+                    <button
+                        class="menu-delete-btn"
+                        onclick="deleteMenuItem('${escapeHTML(item.id)}')"
+                    >
+                        🗑 Delete
+                    </button>
+                </div>
+
+            </div>
+        `;
+    }).join("");
+}
+
+function populateMenuCategoryList(){
+    const list = document.getElementById("menuCategoryList");
+
+    if(!list){
+        return;
+    }
+
+    list.innerHTML = getMenuCategories().map(function(category){
+        return `<option value="${escapeHTML(category)}"></option>`;
+    }).join("");
+}
+
+function openMenuItemForm(itemId){
+    if(!window.isCurrentUserAdmin){
+        showToast("Admin access required.");
+        return;
+    }
+
+    editingMenuItemId = itemId || null;
+
+    populateMenuCategoryList();
+
+    const title = document.getElementById("menuItemModalTitle");
+    const saveButton = document.getElementById("saveMenuItemBtn");
+
+    const name = document.getElementById("menuItemName");
+    const price = document.getElementById("menuItemPrice");
+    const category = document.getElementById("menuItemCategory");
+    const icon = document.getElementById("menuItemIcon");
+    const description = document.getElementById("menuItemDescription");
+
+    if(editingMenuItemId){
+        const item = menuItems.find(function(product){
+            return product.id === editingMenuItemId;
+        });
+
+        if(!item){
+            showToast("Menu item not found.");
+            return;
+        }
+
+        title.textContent = "Edit Menu Item";
+        saveButton.textContent = "Update Menu Item";
+
+        name.value = item.name || "";
+        price.value = item.price || "";
+        category.value = item.category || "";
+        icon.value = item.icon || "";
+        description.value = item.description || "";
+
+    }else{
+        title.textContent = "Add Menu Item";
+        saveButton.textContent = "Save Menu Item";
+
+        name.value = "";
+        price.value = "";
+        category.value = selectedAdminMenuCategory !== "All"
+            ? selectedAdminMenuCategory
+            : "";
+        icon.value = "🍽️";
+        description.value = "";
+    }
+
+    openModal("menuItemModal");
+}
+
+async function saveMenuItem(){
+    if(!window.isCurrentUserAdmin){
+        showToast("Admin access required.");
+        return;
+    }
+
+    const name = document.getElementById("menuItemName").value.trim();
+    const price = Number(document.getElementById("menuItemPrice").value);
+    const category = document.getElementById("menuItemCategory").value.trim();
+    const icon = document.getElementById("menuItemIcon").value.trim() || "🍽️";
+    const description = document.getElementById("menuItemDescription").value.trim();
+
+    if(!name){
+        showToast("Enter item name.");
+        return;
+    }
+
+    if(!category){
+        showToast("Enter category.");
+        return;
+    }
+
+    if(!Number.isFinite(price) || price < 0){
+        showToast("Enter a valid price.");
+        return;
+    }
+
+    if(!firebaseReady){
+        showToast("Firebase connection failed.");
+        return;
+    }
+
+    try{
+        const data = {
+            name:name,
+            category:category,
+            price:price,
+            icon:icon,
+            description:description,
+            updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+        };
+
+        if(editingMenuItemId){
+            await db.collection("menu").doc(editingMenuItemId).update(data);
+            showToast("Menu item updated successfully. ✓");
+        }else{
+            const ref = db.collection("menu").doc();
+            await ref.set({
+                ...data,
+                createdAt:firebase.firestore.FieldValue.serverTimestamp()
+            });
+            showToast("Menu item added successfully. ✓");
+        }
+
+        closeModal("menuItemModal");
+        editingMenuItemId = null;
+
+        await loadMenuItems();
+
+    }catch(error){
+        console.error("Save menu item error:",error);
+        showToast("Could not save menu item.");
+    }
+}
+
+async function deleteMenuItem(itemId){
+    if(!window.isCurrentUserAdmin){
+        showToast("Admin access required.");
+        return;
+    }
+
+    const item = menuItems.find(function(product){
+        return product.id === itemId;
+    });
+
+    if(!item){
+        showToast("Menu item not found.");
+        return;
+    }
+
+    const confirmed = confirm(
+        "Delete this menu item permanently?\n\n" +
+        item.name + " — ₹" + Number(item.price || 0)
+    );
+
+    if(!confirmed){
+        return;
+    }
+
+    if(!firebaseReady){
+        showToast("Firebase connection failed.");
+        return;
+    }
+
+    try{
+        await db.collection("menu").doc(itemId).delete();
+
+        cart = cart.filter(function(cartItem){
+            return cartItem.id !== itemId;
+        });
+
+        saveCart();
+        updateCart();
+
+        showToast("Menu item deleted successfully.");
+
+        await loadMenuItems();
+
+    }catch(error){
+        console.error("Delete menu item error:",error);
+        showToast("Could not delete menu item.");
+    }
 }
 
 
@@ -4961,6 +5585,8 @@ if(firebaseReady){
                 */
 
                 loadOrders();
+                loadMenuItems();
+                renderAdminMenu();
 
             }
 
