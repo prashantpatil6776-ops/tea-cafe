@@ -4826,6 +4826,1436 @@ document.addEventListener(
     }
 );
 
+    /* =========================================================
+   FINAL CUSTOMER + ADMIN SEPARATE SESSION SYSTEM
+   ========================================================= */
+
+/*
+   IMPORTANT:
+   Existing customer auth/db remain:
+      auth = customer Firebase Auth
+      db   = customer Firestore
+
+   Admin gets a completely separate Firebase app:
+      adminAuth
+      adminDb
+*/
+
+let customerApp = null;
+let adminApp = null;
+
+let adminAuth = null;
+let adminDb = null;
+
+
+/* =========================================================
+   INITIALIZE SEPARATE FIREBASE APPS
+========================================================= */
+
+try {
+
+    /*
+       Existing/default Firebase app
+       is used for CUSTOMER.
+    */
+
+    customerApp =
+        firebase.app();
+
+    /*
+       Separate Firebase app for ADMIN.
+    */
+
+    try {
+
+        adminApp =
+            firebase.app("NOIRE_ADMIN_APP");
+
+    } catch(error) {
+
+        adminApp =
+            firebase.initializeApp(
+                firebaseConfig,
+                "NOIRE_ADMIN_APP"
+            );
+
+    }
+
+
+    /*
+       Separate Auth + Firestore
+    */
+
+    adminAuth =
+        adminApp.auth();
+
+    adminDb =
+        adminApp.firestore();
+
+
+    /*
+       Keep customer auth persistence
+       separate and persistent.
+    */
+
+    auth.setPersistence(
+        firebase.auth.Auth.Persistence.LOCAL
+    ).catch(function(error){
+
+        console.error(
+            "Customer persistence error:",
+            error
+        );
+
+    });
+
+
+    /*
+       Admin session also survives refresh/browser restart.
+    */
+
+    adminAuth.setPersistence(
+        firebase.auth.Auth.Persistence.LOCAL
+    ).catch(function(error){
+
+        console.error(
+            "Admin persistence error:",
+            error
+        );
+
+    });
+
+
+    console.log(
+        "✅ Separate Customer + Admin Firebase sessions ready"
+    );
+
+
+} catch(error) {
+
+    console.error(
+        "❌ Separate session initialization failed:",
+        error
+    );
+
+}
+
+
+/* =========================================================
+   CUSTOMER SESSION
+========================================================= */
+
+async function ensureCustomerAuth(){
+
+    if(!firebaseReady){
+
+        throw new Error(
+            "Firebase is not connected."
+        );
+
+    }
+
+
+    /*
+       If customer already has an anonymous session,
+       keep using the SAME UID.
+    */
+
+    if(
+        auth.currentUser &&
+        auth.currentUser.isAnonymous
+    ){
+
+        console.log(
+            "👤 Existing customer session:",
+            auth.currentUser.uid
+        );
+
+        return auth.currentUser;
+
+    }
+
+
+    /*
+       Create a new anonymous customer session
+       only when one does not exist.
+    */
+
+    const result =
+        await auth.signInAnonymously();
+
+
+    console.log(
+        "👤 New customer session:",
+        result.user.uid
+    );
+
+
+    return result.user;
+
+}
+
+
+/* =========================================================
+   CUSTOMER AUTH STATE
+========================================================= */
+
+if(firebaseReady){
+
+    auth.onAuthStateChanged(
+        function(user){
+
+            if(user){
+
+                if(user.isAnonymous){
+
+                    console.log(
+                        "👤 Customer session active:",
+                        user.uid
+                    );
+
+                }
+
+            }else{
+
+                console.log(
+                    "👤 No customer session"
+                );
+
+            }
+
+        }
+    );
+
+}
+
+
+/* =========================================================
+   ADMIN ACCESS CHECK
+========================================================= */
+
+async function checkAdminAccess(user){
+
+    const adminMenu =
+        document.getElementById(
+            "adminOnlyMenu"
+        );
+
+
+    const loginButton =
+        document.getElementById(
+            "loginHeaderButton"
+        );
+
+
+    /*
+       No ADMIN user
+    */
+
+    if(
+        !user ||
+        !adminAuth ||
+        user.isAnonymous
+    ){
+
+        window.isCurrentUserAdmin =
+            false;
+
+
+        if(adminMenu){
+
+            adminMenu.style.display =
+                "none";
+
+        }
+
+
+        if(loginButton){
+
+            loginButton.style.display =
+                "inline-block";
+
+        }
+
+
+        return false;
+
+    }
+
+
+    try{
+
+        /*
+           IMPORTANT:
+           Admin document is checked using
+           ADMIN Firestore instance.
+        */
+
+        const adminDoc =
+            await adminDb
+            .collection("admins")
+            .doc(user.uid)
+            .get();
+
+
+        if(
+            adminDoc.exists &&
+            adminDoc.data().role === "admin"
+        ){
+
+            window.isCurrentUserAdmin =
+                true;
+
+
+            if(adminMenu){
+
+                adminMenu.style.display =
+                    "flex";
+
+            }
+
+
+            if(loginButton){
+
+                loginButton.style.display =
+                    "none";
+
+            }
+
+
+            console.log(
+                "👑 ADMIN VERIFIED:",
+                user.uid
+            );
+
+
+            return true;
+
+        }
+
+
+        /*
+           User exists but is not admin.
+        */
+
+        window.isCurrentUserAdmin =
+            false;
+
+
+        if(adminMenu){
+
+            adminMenu.style.display =
+                "none";
+
+        }
+
+
+        if(loginButton){
+
+            loginButton.style.display =
+                "inline-block";
+
+        }
+
+
+        return false;
+
+
+    }catch(error){
+
+        console.error(
+            "❌ Admin access check failed:",
+            error
+        );
+
+
+        window.isCurrentUserAdmin =
+            false;
+
+
+        if(adminMenu){
+
+            adminMenu.style.display =
+                "none";
+
+        }
+
+
+        if(loginButton){
+
+            loginButton.style.display =
+                "inline-block";
+
+        }
+
+
+        return false;
+
+    }
+
+}
+
+
+/* =========================================================
+   ADMIN LOGIN
+========================================================= */
+
+async function adminLogin(){
+
+    if(
+        !firebaseReady ||
+        !adminAuth ||
+        !adminDb
+    ){
+
+        showToast(
+            "Firebase connection failed."
+        );
+
+        return;
+
+    }
+
+
+    const email =
+        document.getElementById(
+            "adminEmail"
+        ).value.trim();
+
+
+    const password =
+        document.getElementById(
+            "adminPassword"
+        ).value;
+
+
+    const errorBox =
+        document.getElementById(
+            "loginError"
+        );
+
+
+    if(errorBox){
+
+        errorBox.textContent = "";
+
+    }
+
+
+    if(!email || !password){
+
+        showToast(
+            "Enter email and password."
+        );
+
+        return;
+
+    }
+
+
+    try{
+
+        showToast(
+            "Admin login..."
+        );
+
+
+        /*
+           IMPORTANT:
+           Admin login uses adminAuth,
+           NOT customer auth.
+        */
+
+        const result =
+            await adminAuth
+            .signInWithEmailAndPassword(
+                email,
+                password
+            );
+
+
+        const user =
+            result.user;
+
+
+        console.log(
+            "👑 Admin Firebase login successful:",
+            user.uid
+        );
+
+
+        /*
+           Verify admin role.
+        */
+
+        const adminDoc =
+            await adminDb
+            .collection("admins")
+            .doc(user.uid)
+            .get();
+
+
+        if(
+            !adminDoc.exists ||
+            adminDoc.data().role !== "admin"
+        ){
+
+            await adminAuth.signOut();
+
+
+            window.isCurrentUserAdmin =
+                false;
+
+
+            showToast(
+                "This account is not an admin."
+            );
+
+
+            return;
+
+        }
+
+
+        /*
+           Admin verified.
+        */
+
+        window.isCurrentUserAdmin =
+            true;
+
+
+        const adminMenu =
+            document.getElementById(
+                "adminOnlyMenu"
+            );
+
+
+        const loginButton =
+            document.getElementById(
+                "loginHeaderButton"
+            );
+
+
+        if(adminMenu){
+
+            adminMenu.style.display =
+                "flex";
+
+        }
+
+
+        if(loginButton){
+
+            loginButton.style.display =
+                "none";
+
+        }
+
+
+        document
+            .getElementById("loginBox")
+            .classList
+            .add("hidden");
+
+
+        document
+            .getElementById("dashboard")
+            .classList
+            .remove("hidden");
+
+
+        showPage("admin");
+
+
+        /*
+           Start admin order listener.
+        */
+
+        loadOrders();
+
+
+        showToast(
+            "Welcome Admin! 👑"
+        );
+
+
+    }catch(error){
+
+        console.error(
+            "❌ Admin login error:",
+            error
+        );
+
+
+        let message =
+            "Invalid email or password.";
+
+
+        if(
+            error.code ===
+            "auth/user-not-found"
+        ){
+
+            message =
+                "Admin account not found.";
+
+        }
+        else if(
+            error.code ===
+            "auth/wrong-password"
+        ){
+
+            message =
+                "Incorrect password.";
+
+        }
+        else if(
+            error.code ===
+            "auth/invalid-credential"
+        ){
+
+            message =
+                "Invalid email or password.";
+
+        }
+        else if(
+            error.code ===
+            "auth/invalid-email"
+        ){
+
+            message =
+                "Invalid email format.";
+
+        }
+        else if(
+            error.code ===
+            "auth/too-many-requests"
+        ){
+
+            message =
+                "Too many attempts. Please try again later.";
+
+        }
+
+
+        if(errorBox){
+
+            errorBox.textContent =
+                message;
+
+        }
+
+
+        showToast(message);
+
+    }
+
+}
+
+
+/* =========================================================
+   ADMIN LOGOUT
+========================================================= */
+
+async function adminLogout(){
+
+    try{
+
+        /*
+           ONLY ADMIN SESSION is signed out.
+
+           Customer anonymous session stays alive.
+        */
+
+        if(adminAuth){
+
+            await adminAuth.signOut();
+
+        }
+
+
+        window.isCurrentUserAdmin =
+            false;
+
+
+        const adminMenu =
+            document.getElementById(
+                "adminOnlyMenu"
+            );
+
+
+        const loginButton =
+            document.getElementById(
+                "loginHeaderButton"
+            );
+
+
+        if(adminMenu){
+
+            adminMenu.style.display =
+                "none";
+
+        }
+
+
+        if(loginButton){
+
+            loginButton.style.display =
+                "inline-block";
+
+        }
+
+
+        if(ordersListener){
+
+            ordersListener();
+
+            ordersListener =
+                null;
+
+        }
+
+
+        document
+            .getElementById("loginBox")
+            .classList
+            .remove("hidden");
+
+
+        document
+            .getElementById("dashboard")
+            .classList
+            .add("hidden");
+
+
+        showPage("menu");
+
+
+        showToast(
+            "Admin logged out successfully."
+        );
+
+
+    }catch(error){
+
+        console.error(
+            "Admin logout error:",
+            error
+        );
+
+    }
+
+}
+
+
+/* =========================================================
+   LOAD ORDERS — ADMIN FIRESTORE
+========================================================= */
+
+function loadOrders(){
+
+    if(
+        !firebaseReady ||
+        !adminDb
+    ){
+
+        return;
+
+    }
+
+
+    if(!window.isCurrentUserAdmin){
+
+        console.warn(
+            "Not admin. Orders blocked."
+        );
+
+        return;
+
+    }
+
+
+    if(ordersListener){
+
+        ordersListener();
+
+        ordersListener =
+            null;
+
+    }
+
+
+    /*
+       IMPORTANT:
+       Orders are now read through adminDb.
+    */
+
+    ordersListener =
+        adminDb
+        .collection("orders")
+        .orderBy(
+            "createdAt",
+            "desc"
+        )
+        .onSnapshot(
+            function(snapshot){
+
+                const orders = [];
+
+
+                snapshot.forEach(
+                    function(doc){
+
+                        orders.push({
+
+                            id:doc.id,
+
+                            ...doc.data()
+
+                        });
+
+                    }
+                );
+
+
+                renderOrders(orders);
+
+            },
+            function(error){
+
+                console.error(
+                    "Orders listener error:",
+                    error
+                );
+
+
+                showToast(
+                    "Could not load orders."
+                );
+
+            }
+        );
+
+}
+
+
+/* =========================================================
+   VERIFY / REJECT PAYMENT — ADMIN
+========================================================= */
+
+async function verifyPayment(
+    orderId,
+    paymentStatus
+){
+
+    if(!window.isCurrentUserAdmin){
+
+        showToast(
+            "Admin access required."
+        );
+
+        return;
+
+    }
+
+
+    if(
+        paymentStatus !== "paid" &&
+        paymentStatus !== "payment_rejected"
+    ){
+
+        showToast(
+            "Invalid payment status."
+        );
+
+        return;
+
+    }
+
+
+    const message =
+        paymentStatus === "paid"
+        ? "Verify that you received this payment?"
+        : "Reject this payment submission?";
+
+
+    if(!confirm(message)){
+
+        return;
+
+    }
+
+
+    try{
+
+        const orderRef =
+            adminDb
+            .collection("orders")
+            .doc(orderId);
+
+
+        const orderSnap =
+            await orderRef.get();
+
+
+        if(!orderSnap.exists){
+
+            throw new Error(
+                "Order not found."
+            );
+
+        }
+
+
+        const adminUser =
+            adminAuth.currentUser;
+
+
+        if(!adminUser){
+
+            throw new Error(
+                "Admin session unavailable."
+            );
+
+        }
+
+
+        const paymentUpdate = {
+
+            paymentStatus:
+                paymentStatus,
+
+            paymentVerifiedAt:
+                firebase.firestore
+                    .FieldValue
+                    .serverTimestamp(),
+
+            paymentVerifiedBy:
+                adminUser.uid
+
+        };
+
+
+        if(paymentStatus === "paid"){
+
+            paymentUpdate.status =
+                "received";
+
+        }
+
+
+        await orderRef.update(
+            paymentUpdate
+        );
+
+
+        if(paymentStatus === "paid"){
+
+            showToast(
+                "Payment verified successfully. ✓"
+            );
+
+        }else{
+
+            showToast(
+                "Payment rejected."
+            );
+
+        }
+
+
+    }catch(error){
+
+        console.error(
+            "Payment verification error:",
+            error
+        );
+
+
+        const detail =
+            error && error.code
+            ? error.code +
+              ": " +
+              (error.message || "")
+            : (
+                error &&
+                error.message
+            ) ||
+            "Unknown error";
+
+
+        showToast(
+            "Could not update payment: " +
+            detail
+        );
+
+    }
+
+}
+
+
+/* =========================================================
+   REMOVE ORDER — ADMIN
+========================================================= */
+
+async function removeOrder(orderId){
+
+    if(!window.isCurrentUserAdmin){
+
+        showToast(
+            "Admin access required."
+        );
+
+        return;
+
+    }
+
+
+    if(!orderId){
+
+        showToast(
+            "Order ID missing."
+        );
+
+        return;
+
+    }
+
+
+    try{
+
+        const orderRef =
+            adminDb
+            .collection("orders")
+            .doc(orderId);
+
+
+        const orderDoc =
+            await orderRef.get();
+
+
+        if(!orderDoc.exists){
+
+            showToast(
+                "Order no longer exists."
+            );
+
+            return;
+
+        }
+
+
+        const order =
+            orderDoc.data();
+
+
+        if(
+            order.paymentStatus !==
+            "paid"
+        ){
+
+            showToast(
+                "Only verified paid orders can be removed."
+            );
+
+            return;
+
+        }
+
+
+        const confirmed =
+            confirm(
+                "Remove this verified paid order permanently?\n\nOrder #" +
+                orderId.slice(0,7)
+            );
+
+
+        if(!confirmed){
+
+            return;
+
+        }
+
+
+        await orderRef.delete();
+
+
+        showToast(
+            "Order removed successfully."
+        );
+
+
+    }catch(error){
+
+        console.error(
+            "Remove order error:",
+            error
+        );
+
+
+        showToast(
+            "Could not remove order."
+        );
+
+    }
+
+}
+
+
+/* =========================================================
+   UPDATE ORDER STATUS — ADMIN
+========================================================= */
+
+async function updateOrderStatus(
+    orderId,
+    status
+){
+
+    if(!window.isCurrentUserAdmin){
+
+        showToast(
+            "Admin access required."
+        );
+
+        return;
+
+    }
+
+
+    try{
+
+        const orderRef =
+            adminDb
+            .collection("orders")
+            .doc(orderId);
+
+
+        const orderDoc =
+            await orderRef.get();
+
+
+        if(!orderDoc.exists){
+
+            showToast(
+                "Order no longer exists."
+            );
+
+            return;
+
+        }
+
+
+        const order =
+            orderDoc.data();
+
+
+        /*
+           Payment must be verified
+           before completing order.
+        */
+
+        if(status === "completed"){
+
+            if(
+                order.paymentStatus !==
+                "paid"
+            ){
+
+                showToast(
+                    "Verify payment first. Then mark the order Completed."
+                );
+
+                return;
+
+            }
+
+
+            const confirmed =
+                confirm(
+                    "Payment is verified. Mark this order Completed and remove it from Entries?"
+                );
+
+
+            if(!confirmed){
+
+                return;
+
+            }
+
+
+            await orderRef.delete();
+
+
+            showToast(
+                "Order completed and removed from Entries. ✓"
+            );
+
+
+            return;
+
+        }
+
+
+        await orderRef.update({
+
+            status:status
+
+        });
+
+
+        showToast(
+            "Order status updated."
+        );
+
+
+    }catch(error){
+
+        console.error(
+            "Status update error:",
+            error
+        );
+
+
+        showToast(
+            "Could not update order."
+        );
+
+    }
+
+}
+
+
+/* =========================================================
+   ADMIN SESSION RESTORE
+========================================================= */
+
+if(adminAuth){
+
+    adminAuth.onAuthStateChanged(
+        async function(user){
+
+            console.log(
+                "👑 Admin auth state:",
+                user
+            );
+
+
+            /*
+               No admin session.
+            */
+
+            if(!user){
+
+                window.isCurrentUserAdmin =
+                    false;
+
+
+                const adminMenu =
+                    document.getElementById(
+                        "adminOnlyMenu"
+                    );
+
+
+                const loginButton =
+                    document.getElementById(
+                        "loginHeaderButton"
+                    );
+
+
+                if(adminMenu){
+
+                    adminMenu.style.display =
+                        "none";
+
+                }
+
+
+                if(loginButton){
+
+                    loginButton.style.display =
+                        "inline-block";
+
+                }
+
+
+                return;
+
+            }
+
+
+            /*
+               Verify admin after refresh.
+            */
+
+            const isAdmin =
+                await checkAdminAccess(
+                    user
+                );
+
+
+            if(!isAdmin){
+
+                await adminAuth.signOut();
+
+                return;
+
+            }
+
+
+            /*
+               ADMIN SESSION RESTORED.
+            */
+
+            window.isCurrentUserAdmin =
+                true;
+
+
+            const loginBox =
+                document.getElementById(
+                    "loginBox"
+                );
+
+
+            const dashboard =
+                document.getElementById(
+                    "dashboard"
+                );
+
+
+            if(loginBox){
+
+                loginBox.classList.add(
+                    "hidden"
+                );
+
+            }
+
+
+            if(dashboard){
+
+                dashboard.classList.remove(
+                    "hidden"
+                );
+
+            }
+
+
+            /*
+               Only show admin dashboard
+               if admin session is valid.
+            */
+
+            loadOrders();
+
+
+            console.log(
+                "✅ Admin session restored automatically."
+            );
+
+        }
+    );
+
+}
+
+
+/* =========================================================
+   SESSION INFORMATION
+========================================================= */
+
+function getCustomerSession(){
+
+    if(
+        auth &&
+        auth.currentUser &&
+        auth.currentUser.isAnonymous
+    ){
+
+        return {
+
+            uid:
+                auth.currentUser.uid,
+
+            type:
+                "customer"
+
+        };
+
+    }
+
+
+    return null;
+
+}
+
+
+function getAdminSession(){
+
+    if(
+        adminAuth &&
+        adminAuth.currentUser
+    ){
+
+        return {
+
+            uid:
+                adminAuth.currentUser.uid,
+
+            email:
+                adminAuth.currentUser.email,
+
+            type:
+                "admin"
+
+        };
+
+    }
+
+
+    return null;
+
+}
+
+
+/* =========================================================
+   DEBUG SESSION STATUS
+========================================================= */
+
+window.getNoireSessions =
+    function(){
+
+        console.log(
+            "👤 CUSTOMER SESSION:",
+            getCustomerSession()
+        );
+
+
+        console.log(
+            "👑 ADMIN SESSION:",
+            getAdminSession()
+        );
+
+
+        return {
+
+            customer:
+                getCustomerSession(),
+
+            admin:
+                getAdminSession()
+
+        };
+
+    };
+
+
+console.log(
+    "✅ NOIRÉ separate session system loaded."
+);
+
+console.log(
+    "ℹ️ Type getNoireSessions() in console to check sessions."
+);
 </script>
 
 </body>
