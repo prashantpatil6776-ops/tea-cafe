@@ -3821,23 +3821,30 @@ async function verifyPayment(
 
     try{
 
-        await db
-        .collection("orders")
-        .doc(orderId)
-        .update({
+        const orderRef = db
+            .collection("orders")
+            .doc(orderId);
 
-            paymentStatus:
-                paymentStatus,
+        const orderSnap = await orderRef.get();
 
+        if(!orderSnap.exists){
+            throw new Error("Order not found.");
+        }
+
+        const paymentUpdate = {
+            paymentStatus: paymentStatus,
             paymentVerifiedAt:
-                firebase.firestore
-                    .FieldValue
-                    .serverTimestamp(),
+                firebase.firestore.FieldValue.serverTimestamp(),
+            paymentVerifiedBy: auth.currentUser.uid
+        };
 
-            paymentVerifiedBy:
-                auth.currentUser.uid
+        // Once admin confirms the payment (UPI or Cash),
+        // move the order into Received automatically.
+        if(paymentStatus === "paid"){
+            paymentUpdate.status = "received";
+        }
 
-        });
+        await orderRef.update(paymentUpdate);
 
 
         if(paymentStatus === "paid"){
@@ -3862,9 +3869,13 @@ async function verifyPayment(
             error
         );
 
+        const detail =
+            error && error.code
+            ? error.code + ": " + (error.message || "")
+            : (error && error.message) || "Unknown error";
 
         showToast(
-            "Could not update payment."
+            "Could not update payment: " + detail
         );
 
     }
