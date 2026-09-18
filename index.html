@@ -15,6 +15,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-storage-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-messaging-compat.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
@@ -933,6 +934,84 @@ button{
     border-radius:15px;
 }
 
+.admin-menu-image{
+    width:58px;
+    height:58px;
+    flex:0 0 58px;
+    border-radius:14px;
+    overflow:hidden;
+    background:rgba(212,175,99,.08);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+}
+.admin-menu-image img{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+    display:block;
+}
+.admin-menu-image .fallback-icon{
+    font-size:30px;
+}
+.food-icon{
+    overflow:hidden;
+}
+.food-icon img{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+    display:block;
+    border-radius:16px;
+}
+.image-preview{
+    width:100%;
+    max-height:220px;
+    object-fit:cover;
+    border-radius:14px;
+    margin-top:10px;
+    border:1px solid rgba(255,255,255,.08);
+}
+.category-manager{
+    display:flex;
+    gap:8px;
+    margin-top:8px;
+}
+.category-manager button{
+    flex:0 0 auto;
+    border:1px solid var(--border);
+    background:rgba(212,175,99,.08);
+    color:var(--gold-light);
+    border-radius:10px;
+    padding:0 14px;
+}
+.category-manager button:hover{
+    background:var(--gold);
+    color:#080808;
+}
+.category-list{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    margin-top:15px;
+}
+.category-chip{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    padding:8px 10px;
+    border-radius:999px;
+    background:#181818;
+    border:1px solid rgba(255,255,255,.08);
+    color:#ddd;
+    font-size:12px;
+}
+.category-chip button{
+    border:0;
+    background:transparent;
+    color:#ef8c8c;
+    cursor:pointer;
+}
 .admin-menu-icon{
     width:58px;
     height:58px;
@@ -1695,13 +1774,22 @@ button{
 
             <div class="form-group">
                 <label>Category</label>
-                <input id="menuItemCategory" type="text" list="menuCategoryList" placeholder="Example: Drinks">
-                <datalist id="menuCategoryList"></datalist>
+                <select id="menuItemCategory"></select>
+                <div class="category-manager">
+                    <button type="button" onclick="openCategoryManager()">＋ New Category</button>
+                </div>
             </div>
 
             <div class="form-group">
-                <label>Icon / Emoji</label>
+                <label>Icon / Emoji (optional)</label>
                 <input id="menuItemIcon" type="text" maxlength="4" placeholder="☕">
+            </div>
+
+            <div class="form-group full">
+                <label>Item Image (optional)</label>
+                <input id="menuItemImage" type="file" accept="image/*" onchange="previewMenuImage(event)">
+                <img id="menuItemImagePreview" class="image-preview hidden" alt="Menu item preview">
+                <small id="menuItemImageNote" style="display:block;color:#777;margin-top:7px;">JPG, PNG or WEBP. Recommended square image.</small>
             </div>
 
             <div class="form-group full">
@@ -1723,6 +1811,25 @@ button{
 
 </div>
 
+
+<!-- ================= CATEGORY MANAGER MODAL ================= -->
+<div id="categoryManagerModal" class="modal-overlay">
+    <div class="modal">
+        <div class="modal-header">
+            <h2>Manage Categories</h2>
+            <button class="close-btn" onclick="closeModal('categoryManagerModal')">×</button>
+        </div>
+
+        <div class="form-group">
+            <label>New Category Name</label>
+            <input id="newCategoryName" type="text" maxlength="40" placeholder="Example: Sandwiches">
+        </div>
+
+        <button class="primary-btn" onclick="addNewCategory()">Add Category</button>
+
+        <div id="categoryManagerList" class="category-list"></div>
+    </div>
+</div>
 
 <!-- ================= CART MODAL ================= -->
 
@@ -2056,6 +2163,7 @@ try{
 
     window.auth = firebase.auth();
     window.db = firebase.firestore();
+    window.storage = firebase.storage();
 
     // Firebase Cloud Messaging for background notifications.
     // The VAPID key must be copied from Firebase Console > Project Settings > Cloud Messaging.
@@ -2344,11 +2452,14 @@ function openAdminLogin(){
 
 let editingMenuItemId = null;
 let selectedAdminMenuCategory = "All";
+let menuCategories = [];
 
 async function loadMenuItems(){
     if(!firebaseReady){
         menuItems = defaultMenuItems.map(item => ({...item}));
-        await loadMenuItems();
+        renderCategories();
+        renderMenu();
+        updateCart();
         return;
     }
 
@@ -2366,6 +2477,7 @@ async function loadMenuItems(){
                     price:Number(item.price),
                     icon:item.icon,
                     description:item.description,
+                    imageUrl:item.imageUrl || "",
                     createdAt:firebase.firestore.FieldValue.serverTimestamp(),
                     updatedAt:firebase.firestore.FieldValue.serverTimestamp()
                 });
@@ -2386,7 +2498,8 @@ async function loadMenuItems(){
                     category:data.category || "Other",
                     price:Number(data.price || 0),
                     icon:data.icon || "🍽️",
-                    description:data.description || ""
+                    description:data.description || "",
+                    imageUrl:data.imageUrl || ""
                 });
             });
 
@@ -2396,6 +2509,7 @@ async function loadMenuItems(){
             });
         }
 
+        menuCategories = getMenuCategories();
         renderCategories();
         renderMenu();
         updateCart();
@@ -2487,8 +2601,11 @@ function renderAdminMenu(){
         return `
             <div class="admin-menu-card">
 
-                <div class="admin-menu-icon">
-                    ${escapeHTML(item.icon || "🍽️")}
+                <div class="admin-menu-image">
+                    ${item.imageUrl
+                        ? `<img src="${escapeHTML(item.imageUrl)}" alt="${escapeHTML(item.name)}">`
+                        : `<span class="fallback-icon">${escapeHTML(item.icon || "🍽️")}</span>`
+                    }
                 </div>
 
                 <div class="admin-menu-info">
@@ -2520,16 +2637,141 @@ function renderAdminMenu(){
     }).join("");
 }
 
-function populateMenuCategoryList(){
-    const list = document.getElementById("menuCategoryList");
+async function loadMenuCategories(){
+    menuCategories = getMenuCategories();
 
-    if(!list){
+    if(firebaseReady){
+        try{
+            const snapshot = await db.collection("categories").get();
+            snapshot.forEach(function(doc){
+                const name = String(doc.data().name || "").trim();
+                if(name && !menuCategories.includes(name)){
+                    menuCategories.push(name);
+                }
+            });
+        }catch(error){
+            console.warn("Could not load saved categories:", error);
+        }
+    }
+
+    menuCategories = [...new Set(menuCategories)].filter(Boolean).sort((a,b)=>a.localeCompare(b));
+    populateMenuCategoryList();
+    renderCategoryManagerList();
+}
+
+function populateMenuCategoryList(){
+    const select = document.getElementById("menuItemCategory");
+    if(!select) return;
+
+    const current = select.value;
+    select.innerHTML = menuCategories.map(function(category){
+        return `<option value="${escapeHTML(category)}">${escapeHTML(category)}</option>`;
+    }).join("");
+
+    if(current && menuCategories.includes(current)){
+        select.value = current;
+    }
+}
+
+function renderCategoryManagerList(){
+    const list = document.getElementById("categoryManagerList");
+    if(!list) return;
+
+    list.innerHTML = menuCategories.map(function(category){
+        const count = menuItems.filter(item => item.category === category).length;
+        return `
+            <div class="category-chip">
+                <span>${escapeHTML(category)}${count ? ` (${count})` : ""}</span>
+                <button type="button" onclick="deleteCategory('${escapeHTML(category).replace(/'/g,"&#039;")}')" title="Delete category">×</button>
+            </div>
+        `;
+    }).join("");
+}
+
+async function openCategoryManager(){
+    if(!window.isCurrentUserAdmin){
+        showToast("Admin access required.");
+        return;
+    }
+    await loadMenuCategories();
+    document.getElementById("newCategoryName").value = "";
+    openModal("categoryManagerModal");
+}
+
+async function addNewCategory(){
+    if(!window.isCurrentUserAdmin || !firebaseReady){
+        showToast("Firebase connection failed or admin access required.");
         return;
     }
 
-    list.innerHTML = getMenuCategories().map(function(category){
-        return `<option value="${escapeHTML(category)}"></option>`;
-    }).join("");
+    const input = document.getElementById("newCategoryName");
+    const name = input.value.trim();
+
+    if(!name){
+        showToast("Enter category name.");
+        return;
+    }
+
+    const exists = menuCategories.some(c => c.toLowerCase() === name.toLowerCase());
+    if(exists){
+        showToast("Category already exists.");
+        return;
+    }
+
+    try{
+        await db.collection("categories").doc().set({
+            name:name,
+            createdAt:firebase.firestore.FieldValue.serverTimestamp(),
+            updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        menuCategories.push(name);
+        menuCategories = [...new Set(menuCategories)].sort((a,b)=>a.localeCompare(b));
+        populateMenuCategoryList();
+        renderCategoryManagerList();
+
+        document.getElementById("menuItemCategory").value = name;
+        input.value = "";
+
+        showToast("Category added successfully. ✓");
+    }catch(error){
+        console.error("Add category error:",error);
+        showToast("Could not add category.");
+    }
+}
+
+async function deleteCategory(category){
+    if(!window.isCurrentUserAdmin || !firebaseReady) return;
+
+    const count = menuItems.filter(item => item.category === category).length;
+
+    if(count > 0){
+        showToast("Delete or move its menu items first.");
+        return;
+    }
+
+    if(!confirm(`Delete category "${category}"?`)) return;
+
+    try{
+        const snapshot = await db.collection("categories")
+            .where("name","==",category)
+            .get();
+
+        const batch = db.batch();
+        snapshot.forEach(doc => batch.delete(doc.ref));
+        await batch.commit();
+
+        menuCategories = menuCategories.filter(c => c !== category);
+        populateMenuCategoryList();
+        renderCategoryManagerList();
+        renderCategories();
+        renderAdminMenuFilters();
+
+        showToast("Category deleted successfully.");
+    }catch(error){
+        console.error("Delete category error:",error);
+        showToast("Could not delete category.");
+    }
 }
 
 function openMenuItemForm(itemId){
@@ -2550,6 +2792,9 @@ function openMenuItemForm(itemId){
     const category = document.getElementById("menuItemCategory");
     const icon = document.getElementById("menuItemIcon");
     const description = document.getElementById("menuItemDescription");
+    const imageInput = document.getElementById("menuItemImage");
+    const imagePreview = document.getElementById("menuItemImagePreview");
+    const imageNote = document.getElementById("menuItemImageNote");
 
     if(editingMenuItemId){
         const item = menuItems.find(function(product){
@@ -2569,6 +2814,10 @@ function openMenuItemForm(itemId){
         category.value = item.category || "";
         icon.value = item.icon || "";
         description.value = item.description || "";
+        imageInput.value = "";
+        imagePreview.src = item.imageUrl || "";
+        imagePreview.classList.toggle("hidden", !item.imageUrl);
+        imageNote.textContent = item.imageUrl ? "Current image is shown above. Choose another image to replace it." : "JPG, PNG or WEBP. Recommended square image.";
 
     }else{
         title.textContent = "Add Menu Item";
@@ -2576,11 +2825,16 @@ function openMenuItemForm(itemId){
 
         name.value = "";
         price.value = "";
-        category.value = selectedAdminMenuCategory !== "All"
+        const defaultCategory = selectedAdminMenuCategory !== "All"
             ? selectedAdminMenuCategory
-            : "";
+            : (menuCategories[0] || "");
+        category.value = defaultCategory;
         icon.value = "🍽️";
         description.value = "";
+        imageInput.value = "";
+        imagePreview.src = "";
+        imagePreview.classList.add("hidden");
+        imageNote.textContent = "JPG, PNG or WEBP. Recommended square image.";
     }
 
     openModal("menuItemModal");
@@ -2597,43 +2851,86 @@ async function saveMenuItem(){
     const category = document.getElementById("menuItemCategory").value.trim();
     const icon = document.getElementById("menuItemIcon").value.trim() || "🍽️";
     const description = document.getElementById("menuItemDescription").value.trim();
+    const imageInput = document.getElementById("menuItemImage");
+    const selectedFile = imageInput.files && imageInput.files[0] ? imageInput.files[0] : null;
 
     if(!name){
         showToast("Enter item name.");
         return;
     }
-
     if(!category){
-        showToast("Enter category.");
+        showToast("Add/select a category.");
         return;
     }
-
     if(!Number.isFinite(price) || price < 0){
         showToast("Enter a valid price.");
         return;
     }
-
     if(!firebaseReady){
         showToast("Firebase connection failed.");
         return;
     }
+    if(selectedFile && !selectedFile.type.startsWith("image/")){
+        showToast("Please select an image file.");
+        return;
+    }
+    if(selectedFile && selectedFile.size > 5 * 1024 * 1024){
+        showToast("Image must be 5MB or smaller.");
+        return;
+    }
+
+    const saveButton = document.getElementById("saveMenuItemBtn");
+    const oldText = saveButton.textContent;
+    saveButton.disabled = true;
+    saveButton.textContent = "Saving...";
 
     try{
+        const collectionRef = db.collection("menu");
+        let docRef = editingMenuItemId
+            ? collectionRef.doc(editingMenuItemId)
+            : collectionRef.doc();
+
+        let existingImageUrl = "";
+        if(editingMenuItemId){
+            const existing = menuItems.find(item => item.id === editingMenuItemId);
+            existingImageUrl = existing && existing.imageUrl ? existing.imageUrl : "";
+        }
+
+        let imageUrl = existingImageUrl;
+
+        if(selectedFile){
+            const safeName = selectedFile.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+            const storageRef = storage.ref(
+                `menu/${docRef.id}/${Date.now()}_${safeName}`
+            );
+
+            await storageRef.put(selectedFile);
+            imageUrl = await storageRef.getDownloadURL();
+
+            if(existingImageUrl){
+                try{
+                    await storage.refFromURL(existingImageUrl).delete();
+                }catch(deleteError){
+                    console.warn("Old image could not be deleted:", deleteError);
+                }
+            }
+        }
+
         const data = {
             name:name,
             category:category,
             price:price,
             icon:icon,
             description:description,
+            imageUrl:imageUrl,
             updatedAt:firebase.firestore.FieldValue.serverTimestamp()
         };
 
         if(editingMenuItemId){
-            await db.collection("menu").doc(editingMenuItemId).update(data);
+            await docRef.update(data);
             showToast("Menu item updated successfully. ✓");
         }else{
-            const ref = db.collection("menu").doc();
-            await ref.set({
+            await docRef.set({
                 ...data,
                 createdAt:firebase.firestore.FieldValue.serverTimestamp()
             });
@@ -2642,13 +2939,49 @@ async function saveMenuItem(){
 
         closeModal("menuItemModal");
         editingMenuItemId = null;
-
         await loadMenuItems();
+        await loadMenuCategories();
 
     }catch(error){
         console.error("Save menu item error:",error);
-        showToast("Could not save menu item.");
+        showToast("Could not save menu item: " + (error.message || "Unknown error"));
+    }finally{
+        saveButton.disabled = false;
+        saveButton.textContent = oldText;
     }
+}
+
+function previewMenuImage(event){
+    const file = event.target.files && event.target.files[0];
+    const preview = document.getElementById("menuItemImagePreview");
+    const note = document.getElementById("menuItemImageNote");
+
+    if(!file){
+        preview.src = "";
+        preview.classList.add("hidden");
+        note.textContent = "JPG, PNG or WEBP. Recommended square image.";
+        return;
+    }
+
+    if(!file.type.startsWith("image/")){
+        event.target.value = "";
+        showToast("Please select an image file.");
+        return;
+    }
+
+    if(file.size > 5 * 1024 * 1024){
+        event.target.value = "";
+        showToast("Image must be 5MB or smaller.");
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = function(e){
+        preview.src = e.target.result;
+        preview.classList.remove("hidden");
+        note.textContent = file.name;
+    };
+    reader.readAsDataURL(file);
 }
 
 async function deleteMenuItem(itemId){
@@ -2681,6 +3014,14 @@ async function deleteMenuItem(itemId){
     }
 
     try{
+        if(item.imageUrl){
+            try{
+                await storage.refFromURL(item.imageUrl).delete();
+            }catch(imageError){
+                console.warn("Menu image could not be deleted:", imageError);
+            }
+        }
+
         await db.collection("menu").doc(itemId).delete();
 
         cart = cart.filter(function(cartItem){
@@ -2794,7 +3135,10 @@ function renderMenu(){
                 <article class="food-card">
 
                     <div class="food-icon">
-                        ${item.icon}
+                        ${item.imageUrl
+                            ? `<img src="${escapeHTML(item.imageUrl)}" alt="${escapeHTML(item.name)}" loading="lazy">`
+                            : escapeHTML(item.icon || "🍽️")
+                        }
                     </div>
 
                     <div class="food-category">
@@ -5585,7 +5929,8 @@ if(firebaseReady){
                 */
 
                 loadOrders();
-                loadMenuItems();
+                await loadMenuItems();
+                await loadMenuCategories();
                 renderAdminMenu();
 
             }
@@ -5609,6 +5954,10 @@ document.addEventListener(
         renderMenu();
 
         updateCart();
+
+        if(firebaseReady){
+            await loadMenuItems();
+        }
 
 
         const table =
